@@ -1,0 +1,37 @@
+site_name: Big Data - Práctica 1
+site_url: https://alvarodiez20.github.io/bigdata/
+repo_url: https://github.com/alvarodiez20/bigdata
+repo_name: bigdata
+
+theme:
+  name: material
+  language: es
+  palette:
+    - scheme: default
+      primary: teal
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: teal
+      accent: lime
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - content.code.copy
+    - navigation.expand
+    - navigation.indexes
+
+nav:
+  - Home: index.md
+  - Prácticas:
+    - Práctica 1 - Setup and I/O: practicas/p1-setup-io.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
