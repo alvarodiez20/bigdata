@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Big Data Exercises"
 readme = "README.md"
 requires-python = ">=3.11"
+license = { file = "LICENSE" }
 dependencies = [
     "pandas>=2.2.0",
     "pyarrow>=15.0.0",

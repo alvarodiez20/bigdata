@@ -8,13 +8,13 @@
   <a href="https://alvarodiez20.github.io/bigdata/">
     <img src="https://img.shields.io/badge/docs-live-blue?style=flat-square" alt="Documentation">
   </a>
-  <a href="https://github.com/alvarodiez20/bigdata/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/alvarodiez20/bigdata/deploy.yml?style=flat-square" alt="Build Status">
+  <a href="https://github.com/alvarodiez20/bigdata/actions/workflows/docs.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/alvarodiez20/bigdata/docs.yml?style=flat-square" alt="Build Status">
   </a>
   <a href="https://github.com/alvarodiez20/bigdata/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License">
+    <img src="https://img.shields.io/github/license/alvarodiez20/bigdata?style=flat-square" alt="License">
   </a>
-  <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue?style=flat-square" alt="Python Version">
+  <img src="https://img.shields.io/badge/python-3.11%2B-blue?style=flat-square" alt="Python Version">
 </p>
 
 ---

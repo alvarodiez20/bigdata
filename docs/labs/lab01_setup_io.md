@@ -349,4 +349,4 @@ After completing this lab:
 
 ---
 
-**Questions?** Ask your instructor or Teaching Assistant. Happy coding! 🎉
+**Questions?** Ask your instructor. Happy coding! 🎉
