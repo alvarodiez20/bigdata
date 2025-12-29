@@ -1,11 +1,13 @@
-site_name: Big Data - Práctica 1
+site_name: Big Data Course
 site_url: https://alvarodiez20.github.io/bigdata/
 repo_url: https://github.com/alvarodiez20/bigdata
 repo_name: bigdata
 
 theme:
   name: material
-  language: es
+  language: en
+  logo: bigdata_logo.png
+  favicon: bigdata_logo.png
   palette:
     - scheme: default
       primary: teal
@@ -26,8 +28,10 @@ theme:
 
 nav:
   - Home: index.md
-  - Prácticas:
-    - Práctica 1 - Setup and I/O: practicas/p1-setup-io.md
+  - Labs:
+    - Lab 01 - Setup and I/O:
+      - Instructions: labs/lab01_setup_io.md
+      - Tips & Reference: labs/lab01_guide.md
 
 markdown_extensions:
   - admonition
@@ -35,3 +39,8 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.highlight:
       anchor_linenums: true
+
+# Watch additional directories for auto-reload
+watch:
+  - docs
+  - mkdocs.yml

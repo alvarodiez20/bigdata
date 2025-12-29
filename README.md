@@ -1,38 +1,109 @@
-# Big Data - Práctica 1: Setup & I/O Benchmark
+# Big Data Course
 
-Setup del entorno y primeros experimentos de rendimiento para la asignatura de Big Data (UNIE).
+<p align="center">
+  <img src="docs/bigdata_logo.png" alt="Big Data Logo" width="200"/>
+</p>
 
-## 🚀 Inicio Rápido
+<p align="center">
+  <a href="https://alvarodiez20.github.io/bigdata/">
+    <img src="https://img.shields.io/badge/docs-live-blue?style=flat-square" alt="Documentation">
+  </a>
+  <a href="https://github.com/alvarodiez20/bigdata/actions">
+    <img src="https://img.shields.io/github/actions/workflow/status/alvarodiez20/bigdata/deploy.yml?style=flat-square" alt="Build Status">
+  </a>
+  <a href="https://github.com/alvarodiez20/bigdata/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License">
+  </a>
+  <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue?style=flat-square" alt="Python Version">
+</p>
 
-Este proyecto usa **uv** para una instalación rápida y reproducible.
+---
 
-### 1. Instalación
-```bash
-# Instala dependencies y crea entorno virtual
-uv sync
+## 📚 About
+
+This repository contains laboratory exercises and materials for a university Big Data course. Students will learn fundamental concepts and practical skills for working with large-scale data processing.
+
+## 🎯 Course Topics
+
+- Environment setup and package management
+- File I/O performance (CSV vs Parquet)
+- Data processing with pandas and numpy
+- Performance benchmarking and optimization
+- Big data formats and storage
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.11 or higher
+- Git
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/alvarodiez20/bigdata.git
+   cd bigdata
+   ```
+
+2. **Install uv (package manager)**
+   ```bash
+   pip install uv
+   ```
+
+3. **Install dependencies**
+   ```bash
+   uv sync
+   ```
+
+4. **Start working on labs**
+   ```bash
+   # Open the first lab notebook
+   uv run jupyter lab notebooks/lab01_setup_io.ipynb
+   ```
+
+## 📖 Documentation
+
+Full course documentation is available at: **[alvarodiez20.github.io/bigdata](https://alvarodiez20.github.io/bigdata/)**
+
+## 📁 Repository Structure
+
+```
+bigdata/
+├── docs/              # Course documentation (MkDocs)
+│   └── labs/          # Lab instructions and guides
+├── notebooks/         # Jupyter notebooks for labs
+├── src/               # Source code and utilities
+├── tests/             # Test files
+└── pyproject.toml     # Project dependencies
 ```
 
-### 2. Ejecutar Benchmark
-Genera datos sintéticos (si no existen) y compara CSV vs Parquet:
-```bash
-uv run python -m src.io_benchmark
-```
-Resultados en `results/p1_metrics.json`.
+## 🧪 Labs
 
-### 3. Ver Documentación
-La guía completa de la práctica está en la documentación.
-```bash
-# Levantar servidor local
-uv run mkdocs serve
-```
-Abre http://127.0.0.1:8000
+| Lab | Topic | Status |
+|-----|-------|--------|
+| Lab 01 | Environment Setup & I/O Benchmarking | ✅ Available |
 
-## 📚 Estructura
-- `src/`: Scripts Python (benchmark, utils).
-- `notebooks/`: Jupyter Notebooks para la clase.
-- `docs/`: Fuentes de la documentación MkDocs.
-- `results/`: Salida de los experimentos (JSON/Markdown).
+## 🛠️ Technology Stack
 
-## ☁️ GitHub Pages
-Este repositorio publica automáticamente la documentación en:
-https://alvarodiez20.github.io/bigdata/
+- **Python 3.11+** - Programming language
+- **uv** - Fast Python package manager
+- **pandas** - Data manipulation and analysis
+- **numpy** - Numerical computing
+- **Jupyter** - Interactive notebooks
+- **MkDocs Material** - Documentation site
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👤 Author
+
+**Álvaro Díez**
+- GitHub: [@alvarodiez20](https://github.com/alvarodiez20)
+
+---
+
+<p align="center">
+  Made with ❤️ for Big Data education
+</p>

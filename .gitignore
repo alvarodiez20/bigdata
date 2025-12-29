@@ -38,8 +38,16 @@ env/
 # VS Code
 .vscode/
 
-# Project specific
+# Project specific - Big Data Course
 data/
-results/
+results/*.parquet
+results/*.csv
 site/
 .DS_Store
+
+# Lab solutions (instructor only)
+notebooks/*_solutions.py
+notebooks/*_solutions.ipynb
+
+# Keep results directory but ignore large files
+!results/.gitkeep
