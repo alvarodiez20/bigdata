@@ -17,7 +17,7 @@ jobs:
       - name: Check if version tag exists
         run: |
           VERSION=$(grep "^version" pyproject.toml | cut -d '"' -f 2)
-          TAG="v$VERSION"
+          TAG="$VERSION"
           echo "Checking if tag $TAG exists..."
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Error: Tag $TAG already exists. Please bump the version in pyproject.toml."

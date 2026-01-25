@@ -1,24 +1,27 @@
-# Big Data Course
+# Big Data Course Labs 🐜
 
-<p align="center">
-  <img src="docs/bigdata_logo.png" alt="Big Data Logo" width="200"/>
-</p>
+[![CI Status](https://github.com/alvarodiez20/bigdata/actions/workflows/ci.yml/badge.svg)](https://github.com/alvarodiez20/bigdata/actions/workflows/ci.yml)
+[![Docs Status](https://github.com/alvarodiez20/bigdata/actions/workflows/docs.yml/badge.svg)](https://github.com/alvarodiez20/bigdata/actions/workflows/docs.yml)
+[![Latest Release](https://img.shields.io/github/v/release/alvarodiez20/bigdata)](https://github.com/alvarodiez20/bigdata/releases)
+[![License](https://img.shields.io/github/license/alvarodiez20/bigdata)](https://github.com/alvarodiez20/bigdata/blob/main/LICENSE)
+![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)
 
-<p align="center">
-  <a href="https://alvarodiez20.github.io/bigdata/">
-    <img src="https://img.shields.io/badge/docs-live-blue?style=flat-square" alt="Documentation">
-  </a>
-  <a href="https://github.com/alvarodiez20/bigdata/actions/workflows/docs.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/alvarodiez20/bigdata/docs.yml?style=flat-square&label=docs" alt="Docs Status">
-  </a>
-  <a href="https://github.com/alvarodiez20/bigdata/actions/workflows/ci.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/alvarodiez20/bigdata/ci.yml?style=flat-square&label=ci" alt="CI Status">
-  </a>
-  <a href="https://github.com/alvarodiez20/bigdata/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/alvarodiez20/bigdata?style=flat-square" alt="License">
-  </a>
-  <img src="https://img.shields.io/badge/python-3.11%2B-blue?style=flat-square" alt="Python Version">
-</p>
+<div align="center">
+  <img src="docs/bigdata_logo.png" alt="Big Data Logo" width="300">
+  
+  <h3>Big Data Course Labs</h3>
+  
+  <p>
+    <strong>Fundamental concepts and practical skills for working with large-scale data processing</strong>
+  </p>
+  
+  <p>
+    <a href="#-quick-start">Quick Start</a> •
+    <a href="https://alvarodiez20.github.io/bigdata/">Documentation</a> •
+    <a href="#-course-topics">Topics</a> •
+    <a href="#-labs">Labs</a>
+  </p>
+</div>
 
 ---
 
