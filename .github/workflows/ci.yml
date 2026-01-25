@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if version tag exists
+        run: |
+          VERSION=$(grep "^version" pyproject.toml | cut -d '"' -f 2)
+          TAG="v$VERSION"
+          echo "Checking if tag $TAG exists..."
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Error: Tag $TAG already exists. Please bump the version in pyproject.toml."
+            exit 1
+          else
+            echo "Tag $TAG does not exist. Version check passed."
+          fi

@@ -13,6 +13,7 @@ dependencies = [
     "matplotlib>=3.8.0",
     "seaborn>=0.13.0",
     "ipykernel>=7.1.0",
+    "pylance>=1.0.3",
 ]
 
 [dependency-groups]
