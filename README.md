@@ -9,7 +9,10 @@
     <img src="https://img.shields.io/badge/docs-live-blue?style=flat-square" alt="Documentation">
   </a>
   <a href="https://github.com/alvarodiez20/bigdata/actions/workflows/docs.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/alvarodiez20/bigdata/docs.yml?style=flat-square" alt="Build Status">
+    <img src="https://img.shields.io/github/actions/workflow/status/alvarodiez20/bigdata/docs.yml?style=flat-square&label=docs" alt="Docs Status">
+  </a>
+  <a href="https://github.com/alvarodiez20/bigdata/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/alvarodiez20/bigdata/ci.yml?style=flat-square&label=ci" alt="CI Status">
   </a>
   <a href="https://github.com/alvarodiez20/bigdata/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/alvarodiez20/bigdata?style=flat-square" alt="License">
