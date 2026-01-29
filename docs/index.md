@@ -39,9 +39,17 @@ In this first session ([see lab guide](labs/lab01_setup_io.md)) we will focus on
 3. **Memory management**: Understand what happens when your data doesn't fit in RAM
 4. **Philosophy**: *"What isn't measured, can't be improved"* - We'll measure read times, disk space, and memory usage
 
+### Lab 02: Complexity and the Data Flow
+
+Understanding that $N=1,000$ is not the same as $N=1,000,000$ ([see lab guide](labs/lab02_guide.md)):
+
+1. **The Scale Factor**: Why "fast enough" code fails at scale
+2. **Memory Hierarchy**: Proving via benchmarks that RAM is faster than Disk
+3. **Big O Notation**: Practical application in code profiling and optimization
+4. **Data Flow**: Chunking, streaming, and full loading strategies
+
 ### Coming Soon
 
-- **Lab 02**: Distributed processing with Dask
 - **Lab 03**: Working with real-world datasets
 - **Lab 04**: Advanced optimization techniques
 

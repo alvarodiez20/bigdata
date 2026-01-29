@@ -2,6 +2,7 @@
 
 [![CI Status](https://github.com/alvarodiez20/bigdata/actions/workflows/ci.yml/badge.svg)](https://github.com/alvarodiez20/bigdata/actions/workflows/ci.yml)
 [![Docs Status](https://github.com/alvarodiez20/bigdata/actions/workflows/docs.yml/badge.svg)](https://github.com/alvarodiez20/bigdata/actions/workflows/docs.yml)
+[![Deployment](https://img.shields.io/github/deployments/alvarodiez20/bigdata/github-pages?label=docs)](https://alvarodiez20.github.io/bigdata/)
 [![Latest Release](https://img.shields.io/github/v/release/alvarodiez20/bigdata)](https://github.com/alvarodiez20/bigdata/releases)
 [![License](https://img.shields.io/github/license/alvarodiez20/bigdata)](https://github.com/alvarodiez20/bigdata/blob/main/LICENSE)
 ![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)
@@ -35,6 +36,7 @@ This repository contains laboratory exercises and materials for a university Big
 - File I/O performance (CSV vs Parquet)
 - Data processing with pandas and numpy
 - Performance benchmarking and optimization
+- Computational complexity (Big O) and data flow
 - Big data formats and storage
 
 ## 🚀 Quick Start
@@ -89,6 +91,7 @@ bigdata/
 | Lab | Topic | Status |
 |-----|-------|--------|
 | Lab 01 | Environment Setup & I/O Benchmarking | ✅ Available |
+| Lab 02 | Complexity and Data Flow | ✅ Available |
 
 ## 🛠️ Technology Stack
 

@@ -40,8 +40,7 @@ env/
 
 # Project specific - Big Data Course
 data/
-results/*.parquet
-results/*.csv
+results/
 site/
 .DS_Store
 

@@ -32,6 +32,8 @@ nav:
     - Lab 01 - Setup and I/O:
       - Instructions: labs/lab01_setup_io.md
       - Tips & Reference: labs/lab01_guide.md
+    - Lab 02 - Complexity and Data Flow:
+      - Tips & Reference: labs/lab02_guide.md
 
 markdown_extensions:
   - admonition
