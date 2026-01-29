@@ -1,17 +1,14 @@
 # Lab 02: Tips & Quick Reference
 
-Complete guide with detailed tips, code examples, and quick reference for all TODO functions.
+This guide provides detailed tips, code examples, and cheatsheets to help you complete [Lab 02](lab02_instructions.md).
 
 ---
 
 ## 📚 General Tips
 
-Before you start:
-
-- Run Lab 01 first if you haven't — this lab builds on those concepts
-- Read the docstring carefully — it tells you exactly what each function should do
-- Start with small samples (1,000 rows) before running on 1M rows
-- Use `%%time` magic in Jupyter to quickly time a cell
+- **Start Small**: Always test your code with `n=1000` before running it on `n=1_000_000`.
+- **Use `%%time`**: In Jupyter, put `%%time` at the top of a cell to quickly measure execution time.
+- **Restart Kernel**: If memory usage gets too high, restart the kernel (Circular Arrow icon).
 
 ---
 
@@ -73,7 +70,7 @@ for chunk in pd.read_csv("file.csv", chunksize=50000):
 
 ---
 
-## TODO 1: `generate_user_logs()`
+## Section A: Dataset Generation (`generate_user_logs`)
 
 ### What you need to do
 Generate a 1 million row synthetic dataset representing user activity logs.
@@ -93,7 +90,7 @@ Generate a 1 million row synthetic dataset representing user activity logs.
 
 ---
 
-## TODO 2: `benchmark_search()`
+## Section B: Search Efficiency (`benchmark_search`)
 
 ### What you need to do
 Compare O(N) list search vs O(1) set search.
@@ -115,7 +112,7 @@ Compare O(N) list search vs O(1) set search.
 
 ---
 
-## TODO 3: `load_full()`, `load_chunked()`, `load_iterator()`
+## Section C: Data Flow (`load_full`, `load_chunked`, `load_iterator`)
 
 ### What you need to do
 Compare three data loading strategies.
@@ -137,7 +134,7 @@ memory_used = end_mem - start_mem
 
 ---
 
-## TODO 4: `profile_function()`
+## Section D: Identifying Bottlenecks (`profile_function`)
 
 ### What you need to do
 Wrap a function with cProfile to identify bottlenecks.
@@ -167,7 +164,7 @@ stats_string = string_io.getvalue()
 
 ---
 
-## TODO 5: `find_duplicates_fast()`
+## Section E: The 10x Challenge (`find_duplicates_fast`)
 
 ### What you need to do
 Replace the O(N²) nested loop with an O(N) hash-based solution.
