@@ -33,6 +33,7 @@ nav:
       - Instructions: labs/lab01_setup_io.md
       - Tips & Reference: labs/lab01_guide.md
     - Lab 02 - Complexity and Data Flow:
+      - Instructions: labs/lab02_instructions.md
       - Tips & Reference: labs/lab02_guide.md
 
 markdown_extensions:
