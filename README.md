@@ -35,6 +35,7 @@ This repository contains laboratory exercises and materials for a university Big
 - File I/O performance (CSV vs Parquet)
 - Data processing with pandas and numpy
 - Performance benchmarking and optimization
+- Computational complexity (Big O) and data flow
 - Big data formats and storage
 
 ## 🚀 Quick Start
@@ -89,6 +90,7 @@ bigdata/
 | Lab | Topic | Status |
 |-----|-------|--------|
 | Lab 01 | Environment Setup & I/O Benchmarking | ✅ Available |
+| Lab 02 | Complexity and Data Flow | ✅ Available |
 
 ## 🛠️ Technology Stack
 
