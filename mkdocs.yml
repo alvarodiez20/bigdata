@@ -35,6 +35,9 @@ nav:
     - Lab 02 - Complexity and Data Flow:
       - Instructions: labs/lab02_instructions.md
       - Tips & Reference: labs/lab02_guide.md
+    - Lab 03 - Data Types and Formats:
+      - Instructions: labs/lab03_instructions.md
+      - Tips & Reference: labs/lab03_guide.md
 
 markdown_extensions:
   - admonition
