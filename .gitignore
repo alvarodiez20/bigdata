@@ -50,3 +50,9 @@ notebooks/*_solutions.ipynb
 
 # Keep results directory but ignore large files
 !results/.gitkeep
+
+# Claude 
+CLAUDE.md
+
+# Clases md
+clases/

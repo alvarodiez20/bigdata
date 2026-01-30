@@ -11,7 +11,7 @@ Welcome to the second Big Data laboratory session! In this lab, we will leave th
 
 - **The Scale Factor**: Why code that works for 1,000 items fails for 1,000,000.
 - **Memory Hierarchy**: Proving via benchmarks that RAM is faster than Disk.
-- **Big O Profiling**: How to use `cProfile` to find the exact line slowing you down.
+- **Profiling Tools**: How to use `cProfile`, `py-spy` flamegraphs, and `line_profiler` to find bottlenecks.
 - **Optimization**: Converting O(N²) algorithms to O(N) for massive speedups.
 
 ## ✅ Pre-flight Checklist
@@ -21,6 +21,10 @@ Before starting, ensure you have:
 1.  **Completed Lab 01**: You understand basic I/O and have your environment set up.
 2.  **Updated your repo**: Run `git pull` to get the latest changes (if applicable).
 3.  **Installed dependencies**: Run `uv sync` to ensure you have `psutil` (used for memory profiling).
+4.  **Install profiling tools** (for Exercise 3):
+    ```bash
+    pip install py-spy line_profiler
+    ```
 
 ---
 
@@ -38,9 +42,13 @@ We need a dataset large enough to break inefficient code. You will implement `ge
 
 **Goal**: Save this as `data/raw/user_logs_1m.csv`.
 
-### B. Exercise 1: Search Efficiency (O(N) vs O(1))
+### B. Exercise 1: Search & Sort Efficiency
 
-You will compare finding an item in a Python **List** versus a **Set**.
+You will compare the performance impact of different data structures and algorithms.
+
+**Part 1A: Search - O(N) vs O(1)**
+
+Compare finding an item in a Python **List** versus a **Set**.
 
 1.  Create a list of 1M numbers.
 2.  Create a set of the same 1M numbers.
@@ -48,6 +56,17 @@ You will compare finding an item in a Python **List** versus a **Set**.
 4.  Calculate the speedup.
 
 **What to expect**: The Set should be ~1000x faster.
+
+**Part 1B: Sort - O(N²) vs O(N log N)**
+
+Compare sorting algorithms at different scales.
+
+1.  Implement `bubble_sort()` - the classic O(N²) algorithm.
+2.  Compare against Python's built-in `sorted()` (Timsort, O(N log N)).
+3.  Run benchmarks at N = 100, 1000, 5000.
+4.  Predict and verify what happens at N = 10,000.
+
+**What to expect**: Python sort should be 100x+ faster at N=5000.
 
 ### C. Exercise 2: The Data Flow (Memory Hierarchy)
 
@@ -63,9 +82,24 @@ You will implement three functions to load data, each representing a different a
 
 We provide a function `find_duplicates_slow()` that is deliberately terrible (O(N²)).
 
-1.  Run it on a small sample (10k rows).
+**Part 3A: cProfile Analysis**
+
+1.  Run `find_duplicates_slow()` on a small sample (10k rows).
 2.  Implement `profile_function()` using Python's `cProfile`.
-3.  Analyze the output to find *exactly* which lines are being called millions of times.
+3.  Analyze the output to find *exactly* which functions consume the most time.
+
+**Part 3B: Flamegraph Visualization**
+
+1.  Install `py-spy`: `pip install py-spy`
+2.  Generate a flamegraph SVG of the slow function.
+3.  Open in browser and identify the widest bar (= bottleneck).
+4.  Compare with cProfile results - do they match?
+
+**Part 3C: Line-by-Line Profiling**
+
+1.  Use `line_profiler` to profile the slow function line by line.
+2.  Identify the exact lines that consume the most time.
+3.  Explain WHY those specific lines are slow.
 
 **Goal**: Learn that you can't optimize what you can't measure.
 
