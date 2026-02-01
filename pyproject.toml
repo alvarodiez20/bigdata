@@ -1,6 +1,6 @@
 [project]
 name = "bigdata"
-version = "0.3.0"
+version = "0.3.1"
 description = "Big Data Exercises"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -21,4 +21,9 @@ dev = [
     "click==8.2.1",
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.7.1",
+]
+
+lab02 = [
+    "py-spy>=0.3.14",
+    "line-profiler>=4.1.2",
 ]
