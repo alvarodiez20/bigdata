@@ -1,14 +1,18 @@
 # Lab 02: Tips & Quick Reference
 
-This guide provides detailed tips, code examples, and cheatsheets to help you complete [Lab 02](lab02_instructions.md).
+Complete guide with detailed tips, code examples, and quick reference for all TODO functions.
 
 ---
 
 ## 📚 General Tips
 
-- **Start Small**: Always test your code with `n=1000` before running it on `n=1_000_000`.
-- **Use `%%time`**: In Jupyter, put `%%time` at the top of a cell to quickly measure execution time.
-- **Restart Kernel**: If memory usage gets too high, restart the kernel (Circular Arrow icon).
+Before you start:
+
+- **Start Small**: Always test your code with `n=1000` before running it on `n=1_000_000`
+- **Use `%%time`**: In Jupyter, put `%%time` at the top of a cell to quickly measure execution time
+- **Restart Kernel**: If memory usage gets too high, restart the kernel (Circular Arrow icon)
+- Read the docstring carefully - it tells you exactly what the function should do
+- Look at the test cell below each function - it shows you how the function will be used
 
 ---
 
@@ -27,10 +31,13 @@ elapsed = end - start  # In seconds
 
 ### Memory Measurement
 ```python
-import psutil
+import tracemalloc
 
-# Get current process memory in MB
-memory_mb = psutil.Process().memory_info().rss / 1_000_000
+tracemalloc.start()
+# ... code to measure ...
+current, peak = tracemalloc.get_traced_memory()
+tracemalloc.stop()
+peak_mb = peak / 1024 / 1024
 ```
 
 ### Hash-Based Structures
@@ -49,91 +56,220 @@ counts = Counter([1, 2, 2, 3, 3, 3])
 ```python
 import cProfile
 import pstats
+import io
 
 pr = cProfile.Profile()
 pr.enable()
 # ... code to profile ...
 pr.disable()
 
+# Print stats
 stats = pstats.Stats(pr)
 stats.sort_stats('cumulative')
 stats.print_stats(10)  # Top 10 functions
-```
 
-### Pandas Chunking
-```python
-# Load in chunks
-for chunk in pd.read_csv("file.csv", chunksize=50000):
-    # Process each chunk
-    process(chunk)
+# Capture to string
+string_io = io.StringIO()
+stats.stream = string_io
+stats.print_stats(10)
+stats_string = string_io.getvalue()
 ```
 
 ---
 
-## Section A: Dataset Generation (`generate_user_logs`)
+## TODO 1: `generate_user_logs()`
 
 ### What you need to do
-Generate a 1 million row synthetic dataset representing user activity logs.
+Generate a synthetic dataset with 1 million rows representing user activity logs.
 
-### Key columns
-| Column | Type | Generator |
-|--------|------|-----------|
-| user_id | int | `np.random.randint(1, 50001, size=n)` |
-| session_id | int | `np.arange(n)` |
-| action | str | `np.random.choice([...], size=n)` |
-| timestamp | datetime | `pd.date_range(...)` |
-| value | float | `np.random.uniform(0, 1000, size=n)` |
+### Key concepts
+- Use `numpy` to generate random data efficiently
+- Use `pandas` to organize data into a DataFrame
+- Save as CSV and return metadata
+
+### Detailed hints
+
+**Step 1:** Set the random seed for reproducibility
+```python
+np.random.seed(seed)
+```
+
+**Step 2:** Generate the `user_id` column (1 to 50,000, allows duplicates!)
+```python
+user_ids = np.random.randint(1, 50001, size=n_rows)
+```
+- This creates duplicates on purpose - you'll need them later!
+
+**Step 3:** Generate the `session_id` column (unique session IDs)
+```python
+session_ids = np.arange(n_rows)
+```
+
+**Step 4:** Generate the `action` column (random choice from list)
+```python
+actions = np.random.choice(
+    ["click", "view", "purchase", "scroll", "search"], 
+    size=n_rows
+)
+```
+
+**Step 5:** Generate the `timestamp` column
+```python
+timestamps = pd.date_range("2024-01-01", periods=n_rows, freq="s")
+```
+
+**Step 6:** Generate the `value` column (random floats 0 to 1000)
+```python
+values = np.random.uniform(0, 1000, size=n_rows)
+```
+
+**Step 7:** Create the DataFrame
+```python
+df = pd.DataFrame({
+    "user_id": user_ids,
+    "session_id": session_ids,
+    "action": actions,
+    "timestamp": timestamps,
+    "value": values
+})
+```
+
+**Step 8:** Save to CSV
+```python
+df.to_csv(path, index=False)
+```
+
+**Step 9:** Get file size and return metadata
+```python
+file_size = path.stat().st_size
+return {
+    "rows": df.shape[0],
+    "cols": df.shape[1],
+    "size_mb": file_size / 1_000_000
+}
+```
 
 ### Common mistakes
 - ❌ Forgetting `np.random.seed(seed)` — results won't be reproducible
-- ❌ Using `index=True` — adds an unwanted column
+- ❌ Using `index=True` in `to_csv()` — adds an unwanted column
+- ❌ Wrong column names — tests expect exact names
 
 ---
 
-## Section B: Search Efficiency (`benchmark_search`)
+## TODO 2: `benchmark_search()`
 
 ### What you need to do
-Compare O(N) list search vs O(1) set search.
+Compare search performance in a List (O(N)) vs a Set (O(1)).
 
-### Key steps
-1. Create `list(range(n))` and `set(range(n))`
-2. Generate random keys to search
-3. Time each search individually
-4. Calculate median times
+### Key concepts
+- Lists require scanning every element to find an item
+- Sets use hash tables for instant lookup
+- Measure individual search times and calculate median
+
+### Detailed hints
+
+**Step 1:** Set the random seed
+```python
+np.random.seed(seed)
+```
+
+**Step 2:** Create both data structures
+```python
+data_list = list(range(n))
+data_set = set(range(n))
+```
+
+**Step 3:** Generate random keys to search for
+```python
+keys = np.random.randint(0, n, size=n_searches)
+```
+
+**Step 4:** Time each search in the list
+```python
+list_times = []
+for key in keys:
+    start = time.perf_counter()
+    _ = key in data_list
+    end = time.perf_counter()
+    list_times.append((end - start) * 1000)  # Convert to ms
+```
+
+**Step 5:** Time each search in the set
+```python
+set_times = []
+for key in keys:
+    start = time.perf_counter()
+    _ = key in data_set
+    end = time.perf_counter()
+    set_times.append((end - start) * 1000)  # Convert to ms
+```
+
+**Step 6:** Calculate medians and speedup
+```python
+list_median = np.median(list_times)
+set_median = np.median(set_times)
+speedup = list_median / set_median
+
+return {
+    "list_median_ms": list_median,
+    "set_median_ms": set_median,
+    "speedup": speedup
+}
+```
 
 ### Why use median?
 - Individual searches can vary due to CPU caching
-- Median gives you the "typical" performance
+- Median is less affected by outliers than mean
+- Gives you the "typical" performance
 
-### Expected result
-- List: ~10-50 ms per search
-- Set: ~0.001 ms per search
-- **Speedup: 1000x+**
+### Common mistakes
+- ❌ Not converting to milliseconds — tests expect ms
+- ❌ Timing the loop instead of individual searches
+- ❌ Using mean instead of median
 
 ---
 
-## Section B (Part 2): Sorting Comparison (`bubble_sort`)
+## TODO 3: `bubble_sort()`
 
 ### What you need to do
-Compare O(N²) bubble sort vs O(N log N) Python sort.
+Implement the classic bubble sort algorithm that compares adjacent elements.
 
-### Bubble sort implementation
+### Key concepts
+- Two nested loops = O(N²) time complexity
+- Compare adjacent elements, swap if out of order
+- After each pass, the largest unsorted element "bubbles" to its position
+
+### Detailed hints
+
+**Step 1:** Copy the array (don't modify original)
 ```python
-def bubble_sort(arr):
-    """O(N²) - classic inefficient algorithm"""
-    arr = arr.copy()
-    n = len(arr)
-    for i in range(n):
-        for j in range(0, n-i-1):
-            if arr[j] > arr[j+1]:
-                arr[j], arr[j+1] = arr[j+1], arr[j]
-    return arr
+arr = arr.copy()
+n = len(arr)
+```
+
+**Step 2:** Outer loop (number of passes)
+```python
+for i in range(n):
+    # Inner loop here
+```
+
+**Step 3:** Inner loop (compare adjacent elements)
+```python
+for j in range(0, n - i - 1):
+    if arr[j] > arr[j + 1]:
+        # Swap
+        arr[j], arr[j + 1] = arr[j + 1], arr[j]
+```
+
+**Step 4:** Return sorted array
+```python
+return arr
 ```
 
 ### Why bubble sort is O(N²)
 - Two nested loops over N elements
 - N × N = N² comparisons in worst case
-- Each comparison is O(1), but there are N² of them
+- For N=5000: 25,000,000 operations!
 
 ### Expected results
 
@@ -142,95 +278,151 @@ def bubble_sort(arr):
 | 100 | ~0.001s | ~0.00001s | ~100x |
 | 1,000 | ~0.1s | ~0.0001s | ~1000x |
 | 5,000 | ~2.5s | ~0.001s | ~2500x |
-| 10,000 | ~10s | ~0.002s | ~5000x |
-
-### Key insight
-The ratio grows with N because:
-- Bubble: O(N²) → 4x more work when N doubles
-- Python: O(N log N) → ~2x more work when N doubles
 
 ---
 
-## Section C: Data Flow (`load_full`, `load_chunked`, `load_iterator`)
+## TODO 4-5: Space Complexity Functions
 
 ### What you need to do
-Compare three data loading strategies.
+Implement two different approaches to finding duplicates, demonstrating the time-space trade-off.
 
-### Strategy comparison
-| Method | Code | Memory |
-|--------|------|--------|
-| Full | `pd.read_csv(path)` | High |
-| Chunked | `pd.read_csv(path, chunksize=N)` | Medium |
-| Iterator | `for line in open(path):` | Minimal |
+### Key concepts
+- **Set-based approach**: Uses O(N) extra memory for O(N) time
+- **In-place approach**: Uses O(1) extra memory but O(N log N) time
+- Neither is "better" — the right choice depends on constraints
 
-### Memory measurement tip
+### TODO 4: `find_duplicates_set()`
+
+**Step 1:** Create two sets
 ```python
-start_mem = get_memory_mb()
-# ... load data ...
-end_mem = get_memory_mb()
-memory_used = end_mem - start_mem
+seen = set()       # Items we've encountered
+duplicates = set() # Items we've seen twice
 ```
 
+**Step 2:** Single pass through data
+```python
+for item in data:
+    if item in seen:
+        duplicates.add(item)
+    else:
+        seen.add(item)
+```
+
+**Step 3:** Return as list
+```python
+return list(duplicates)
+```
+
+### TODO 5: `find_duplicates_inplace()`
+
+**Step 1:** Sort in-place
+```python
+data.sort()  # Modifies the input!
+```
+
+**Step 2:** Find adjacent duplicates
+```python
+duplicates = set()
+for i in range(1, len(data)):
+    if data[i] == data[i - 1]:
+        duplicates.add(data[i])
+```
+
+**Step 3:** Return as list
+```python
+return list(duplicates)
+```
+
+### Comparison table
+
+| Method | Time | Space | Pros | Cons |
+|--------|------|-------|------|------|
+| Set-based | O(N) | O(N) | Fastest, preserves order | Uses extra memory |
+| In-place | O(N log N) | O(1) | Memory efficient | Modifies input, slower |
+
+### Common mistakes
+- ❌ Forgetting that `sort()` modifies the original list
+- ❌ Using a list instead of a set (would be O(N²) for lookups!)
+- ❌ Not handling the edge case of empty input
+
 ---
 
-## Section D: Identifying Bottlenecks (`profile_function`)
+## TODO 6: `profile_function()`
 
 ### What you need to do
-Wrap a function with cProfile to identify bottlenecks.
+Use Python's `cProfile` to profile a function and identify bottlenecks.
 
-### Template
+### Key concepts
+- cProfile measures where time is spent
+- Sort by 'cumulative' time to find the biggest bottlenecks
+- Capture stats to a string for analysis
+
+### Detailed hints
+
+**Step 1:** Create profiler and enable it
 ```python
-pr = cProfile.Profile()
-pr.enable()
-result = fn(*args, **kwargs)
-pr.disable()
-
-stats = pstats.Stats(pr)
-stats.sort_stats('cumulative')
-
-# Capture to string
+import cProfile
+import pstats
 import io
+
+profiler = cProfile.Profile()
+profiler.enable()
+```
+
+**Step 2:** Run the function
+```python
+result = fn(*args, **kwargs)
+```
+
+**Step 3:** Disable profiler
+```python
+profiler.disable()
+```
+
+**Step 4:** Create stats object and sort
+```python
+stats = pstats.Stats(profiler)
+stats.sort_stats('cumulative')
+```
+
+**Step 5:** Capture stats to string
+```python
 string_io = io.StringIO()
 stats.stream = string_io
-stats.print_stats(10)
+stats.print_stats(10)  # Top 10 functions
 stats_string = string_io.getvalue()
+```
+
+**Step 6:** Return results
+```python
+return result, stats_string
 ```
 
 ### Reading profile output
 - **ncalls**: Number of times called
 - **tottime**: Time in function (excluding sub-calls)
 - **cumtime**: Total time including sub-calls
+- Look for functions with high cumtime - those are your bottlenecks!
+
+### Common mistakes
+- ❌ Not disabling the profiler before creating stats
+- ❌ Forgetting to call `fn(*args, **kwargs)` — you're profiling nothing!
+- ❌ Not sorting by 'cumulative' time
 
 ---
 
-## Section D (Part 2): Flamegraph with py-spy
+## Flamegraph with py-spy (Demonstration)
 
-### What you need to do
+### What it does
 Generate a visual flamegraph to identify bottlenecks.
 
-### Installation
+### Generating a flamegraph from command line
 ```bash
-pip install py-spy
-```
+# Generate flamegraph (run from terminal, not notebook)
+py-spy record -o flamegraph.svg -- python flamegraph_profile.py
 
-### Generating a flamegraph
-```python
-# Option 1: From within Python (saves to file)
-import subprocess
-subprocess.run([
-    "py-spy", "record",
-    "-o", "flamegraph.svg",
-    "--", "python", "-c",
-    "from your_script import slow_function; slow_function(data)"
-])
-```
-
-```bash
-# Option 2: From command line
-py-spy record -o flamegraph.svg -- python your_script.py
-
-# Option 3: Attach to running process
-py-spy record -o flamegraph.svg --pid 12345
+# Open in browser
+open flamegraph.svg
 ```
 
 ### Reading a flamegraph
@@ -239,7 +431,7 @@ py-spy record -o flamegraph.svg --pid 12345
                     |
     [─ load: 20% ─][────── process: 80% ──────]
                             |
-                    [─ iterrows: 95% ─]
+                    [─ inner_loop: 95% ─]
 ```
 
 - **Width** = time spent (wider = slower)
@@ -247,52 +439,12 @@ py-spy record -o flamegraph.svg --pid 12345
 - **Parent** is above, **children** below
 - Click to zoom into a section
 
-### Why use flamegraphs?
-- Visual representation is easier to understand than text
-- Immediately see the "hot path"
-- Interactive: click to explore
-- Low overhead (~1-5%)
-
 ---
 
-## Section D (Part 3): Line Profiler
+## Line-by-Line Profiling (Demonstration)
 
-### What you need to do
-Profile a function line by line to find exact slow lines.
-
-### Installation
-```bash
-pip install line_profiler
-```
-
-### Using line_profiler in code
-```python
-from line_profiler import LineProfiler
-
-def profile_line_by_line(fn, *args, **kwargs):
-    """Profile a function line by line."""
-    lp = LineProfiler()
-    lp.add_function(fn)
-
-    # Run the function
-    lp.enable()
-    result = fn(*args, **kwargs)
-    lp.disable()
-
-    # Print stats
-    lp.print_stats()
-    return result
-
-# Usage
-profile_line_by_line(find_duplicates_slow, sample_data)
-```
-
-### Using from command line
-```bash
-# Add @profile decorator to functions you want to profile
-# Then run with kernprof
-kernprof -l -v your_script.py
-```
+### What it does
+Use `line_profiler` to identify exactly which lines are slow.
 
 ### Reading line_profiler output
 ```
@@ -307,45 +459,68 @@ Line #      Hits         Time  Per Hit   % Time  Line Contents
 
 - **Hits**: How many times the line executed
 - **Time**: Total time on this line (microseconds)
-- **Per Hit**: Average time per execution
 - **% Time**: Percentage of total function time
 
-### Key insight
-Line profiler shows that the inner loop (line 8-9) runs 50 million times for just 10K elements! This is why O(N²) is catastrophic.
+Lines 8-9 run 50 million times for just 10K elements — this is why O(N²) is catastrophic!
 
 ---
 
-## Section E: The 10x Challenge (`find_duplicates_fast`)
+## TODO 7: `find_duplicates_fast()`
 
 ### What you need to do
-Replace the O(N²) nested loop with an O(N) hash-based solution.
+Replace the O(N²) nested loop with an O(N) hash-based solution using `Counter`.
 
-### Solution using Counter
+### Key concepts
+- Counter counts occurrences in one pass: O(N)
+- Filter for items with count > 1
+- This is 1000x+ faster than nested loops!
+
+### Detailed hints
+
+**Step 1:** Import Counter
 ```python
 from collections import Counter
+```
 
+**Step 2:** Count all occurrences
+```python
+counts = Counter(data)
+```
+- This creates a dictionary: `{value: count}`
+- Runs in O(N) time!
+
+**Step 3:** Filter for duplicates (count > 1)
+```python
+duplicates = [item for item, count in counts.items() if count > 1]
+```
+
+**Step 4:** Return the list
+```python
+return duplicates
+```
+
+### Complete solution
+```python
 def find_duplicates_fast(data):
     counts = Counter(data)
     return [item for item, count in counts.items() if count > 1]
 ```
 
 ### Why is this O(N)?
-1. Counter iterates list once: O(N)
-2. List comprehension iterates counter once: O(unique items) ≤ O(N)
-3. Total: O(N)
+1. `Counter(data)` iterates list once: **O(N)**
+2. List comprehension iterates counter once: **O(unique items) ≤ O(N)**
+3. Total: **O(N)**
 
-### Alternative: Sorting (O(N log N))
-```python
-def find_duplicates_sorted(data):
-    sorted_data = sorted(data)  # O(N log N)
-    duplicates = []
-    prev = None
-    for item in sorted_data:  # O(N)
-        if item == prev and item not in duplicates:
-            duplicates.append(item)
-        prev = item
-    return duplicates
-```
+### Expected results
+- Slow (O(N²)): ~15 seconds for 10K items
+- Fast (O(N)): ~0.001 seconds for 10K items
+- **Speedup: 10,000x+**
+- Fast version can handle 1M items in under 1 second!
+
+### Common mistakes
+- ❌ Using nested loops — that's what we're trying to avoid!
+- ❌ Forgetting to filter for `count > 1` — returns all items
+- ❌ Using a set instead of Counter — loses the count information
 
 ---
 
@@ -355,60 +530,24 @@ def find_duplicates_sorted(data):
 |---------|-----|
 | Running O(N²) on 1M items | Test with small samples first! |
 | `in list` inside a loop | Convert list to set first |
-| Loading full file when memory-limited | Use chunking or iterators |
 | Optimizing without profiling | Profile first, then optimize |
 | Using mean instead of median for timing | Median is more robust |
+| Forgetting `np.random.seed()` | Results won't be reproducible |
 
 ---
 
-## 📊 Expected Results
+## 🚀 Big O Cheat Sheet
 
-When you complete the lab, you should see something like:
+| Complexity | Name | 1K items | 1M items | Example |
+|------------|------|----------|----------|---------|
+| O(1) | Constant | Instant | Instant | Set lookup |
+| O(log N) | Logarithmic | 10 ops | 20 ops | Binary search |
+| O(N) | Linear | 1K ops | 1M ops | Counter |
+| O(N log N) | Linearithmic | 10K ops | 20M ops | Python sort |
+| O(N²) | Quadratic | 1M ops | 1T ops ❌ | Bubble sort |
+| O(2^N) | Exponential | ∞ | ∞ | Brute force |
 
-```
-Exercise 1A: Search Efficiency
-  List: ~15 ms per search
-  Set: ~0.001 ms per search
-  Speedup: 1000x+
-
-Exercise 1B: Sorting
-  Bubble sort (N=5000): ~2.5 seconds
-  Python sort (N=5000): ~0.001 seconds
-  Speedup: 2500x
-
-Exercise 2: Data Flow
-  Full load: ~2 sec, ~300 MB memory
-  Chunked: ~3 sec, ~50 MB peak memory
-  Iterator: ~5 sec, ~0 MB memory
-
-Exercise 3A: cProfile
-  Identified find_duplicates_slow as bottleneck
-  Nested loops consume 99% of time
-
-Exercise 3B: Flamegraph
-  Generated flamegraph.svg
-  Widest bar: comparison operations in nested loop
-
-Exercise 3C: Line Profiler
-  Line 8 (inner loop): 50M hits, 45% of time
-  Line 9 (comparison): 50M hits, 55% of time
-
-Exercise 4: Optimization
-  Slow: ~15 seconds (10K items)
-  Fast: ~0.001 seconds (10K items)
-  Speedup: 10000x+
-```
-
----
-
-## 📦 Files to Submit
-
-1. `notebooks/lab02_complexity_dataflow.ipynb` (with all cells executed)
-2. `results/lab02_metrics.json` (generated by the notebook)
-
-**Do NOT submit:**
-- The 1M row CSV file (too large!)
-- Screenshot of results
+**Rule**: At N=1,000,000, anything above O(N log N) becomes impractical!
 
 ---
 
@@ -420,6 +559,8 @@ If you're stuck:
 2. **Check memory usage** — Are you running out of RAM?
 3. **Profile your code** — Is the bottleneck where you expect?
 4. **Read the error message** — Python errors are usually informative
+5. **Check the docstring** — Does your function return the right type?
+6. **Look at the test** — What does it expect?
 
 ---
 
@@ -427,25 +568,8 @@ If you're stuck:
 
 - [collections.Counter Documentation](https://docs.python.org/3/library/collections.html#collections.Counter)
 - [cProfile Documentation](https://docs.python.org/3/library/profile.html)
-- [py-spy GitHub](https://github.com/benfred/py-spy) - Sampling profiler for Python
-- [line_profiler Documentation](https://github.com/pyutils/line_profiler) - Line-by-line profiling
-- [psutil Documentation](https://psutil.readthedocs.io/)
-- [Pandas read_csv with chunking](https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html)
+- [py-spy GitHub](https://github.com/benfred/py-spy)
+- [line_profiler Documentation](https://github.com/pyutils/line_profiler)
 - [Latency Numbers Every Programmer Should Know](https://colin-scott.github.io/personal_website/research/interactive_latency.html)
-
----
-
-## 🚀 Big O Cheat Sheet
-
-| Complexity | Name | 1K items | 1M items |
-|------------|------|----------|----------|
-| O(1) | Constant | Instant | Instant |
-| O(log N) | Logarithmic | 10 ops | 20 ops |
-| O(N) | Linear | 1K ops | 1M ops |
-| O(N log N) | Linearithmic | 10K ops | 20M ops |
-| O(N²) | Quadratic | 1M ops | 1T ops ❌ |
-| O(2^N) | Exponential | ∞ | ∞ |
-
-**Rule**: At N=1,000,000, anything above O(N log N) becomes impractical!
 
 Good luck! 🎉

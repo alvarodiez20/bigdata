@@ -48,10 +48,28 @@ Understanding that $N=1,000$ is not the same as $N=1,000,000$ ([see lab guide](l
 3. **Big O Notation**: Practical application in code profiling and optimization
 4. **Data Flow**: Chunking, streaming, and full loading strategies
 
+### Lab 03: Data Types and Efficient Formats
+
+Understanding that data types matter for performance ([see lab guide](labs/lab03_guide.md)):
+
+1. **Data Type Optimization**: Reduce memory 5-10x with proper dtype selection
+2. **Format Comparison**: CSV vs Parquet vs Feather trade-offs
+3. **Parquet Deep Dive**: Row groups, compression, predicate pushdown
+4. **Partitioning Strategies**: Organize data for fast analytical queries
+
+### Lab 04: Vectorization and Out-of-Core Computing
+
+Processing data efficiently at scale ([see lab guide](labs/lab04_guide.md)):
+
+1. **Vectorization**: Replace Python loops with NumPy/Pandas (100-200x speedup)
+2. **Broadcasting**: Apply operations across arrays of different shapes
+3. **Out-of-Core Processing**: Handle datasets larger than RAM with chunking
+4. **Online Algorithms**: Calculate statistics in O(1) memory (Welford's algorithm)
+5. **Dask Introduction**: Scale Pandas to larger-than-memory datasets
+
 ### Coming Soon
 
-- **Lab 03**: Working with real-world datasets
-- **Lab 04**: Advanced optimization techniques
+- **Lab 05**: Parallel processing and distributed computing with PySpark
 
 ## 🚀 Getting Started
 

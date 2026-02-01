@@ -1,40 +1,70 @@
-# Lab 02: Complexity and the Data Flow
+# Lab 02: Complexity
 
-Welcome to the second Big Data laboratory session! In this lab, we will leave the safety of small datasets and enter the "Red Zone" where algorithmic complexity matters.
+Welcome to the second Big Data laboratory session! In this lab, we will leave the safety of small datasets and enter the world where algorithmic complexity matters.
 
 ## 📚 Additional Resources
 
-- **[Tips & Reference Guide](lab02_guide.md)** - detailed tips, code examples, and cheatsheets for every exercise.
+- **[Tips & Reference Guide](lab02_guide.md)** - detailed tips, code examples, and cheatsheets for every TODO.
 - **[Lab 01 Instructions](lab01_setup_io.md)** - if you need to review setup or I/O basics.
 
 ## 🎯 What You Will Learn
 
-- **The Scale Factor**: Why code that works for 1,000 items fails for 1,000,000.
-- **Memory Hierarchy**: Proving via benchmarks that RAM is faster than Disk.
+- **Time Complexity**: Why O(N²) fails at scale while O(N log N) succeeds.
+- **Space Complexity**: Understanding memory trade-offs in algorithm design.
 - **Profiling Tools**: How to use `cProfile`, `py-spy` flamegraphs, and `line_profiler` to find bottlenecks.
 - **Optimization**: Converting O(N²) algorithms to O(N) for massive speedups.
+
+## 📝 Implementation Overview
+
+**You will implement these 7 functions:**
+
+| TODO | Function | Purpose |
+|------|----------|---------|
+| 1 | `generate_user_logs()` | Generate 1M row dataset |
+| 2 | `benchmark_search()` | Compare List vs Set |
+| 3 | `bubble_sort()` | Classic O(N²) algorithm |
+| 4 | `find_duplicates_set()` | Hash-based O(N) approach |
+| 5 | `find_duplicates_inplace()` | Sort-based O(N log N) approach |
+| 6 | `profile_function()` | Using cProfile |
+| 7 | `find_duplicates_fast()` | The 10x optimization challenge |
+
+**Provided for you:**
+
+- ✅ `find_duplicates_slow()` — The deliberately terrible O(N²) version to profile
+- ✅ Flamegraph and line_profiler demonstrations
 
 ## ✅ Pre-flight Checklist
 
 Before starting, ensure you have:
 
 1.  **Completed Lab 01**: You understand basic I/O and have your environment set up.
-2.  **Updated your repo**: Run `git pull` to get the latest changes (if applicable).
-3.  **Installed dependencies**: Run `uv sync` to ensure you have `psutil` (used for memory profiling).
-4.  **Install profiling tools** (for Exercise 3):
-    ```bash
-    pip install py-spy line_profiler
-    ```
+2.  **Updated your repo**: Run `git pull` to get the latest changes.
+3.  **Create a branch**: `git checkout -b lab02-complexity`
+4.  **Installed dependencies**: Run `uv sync --group lab02` to install profiling tools.
 
 ---
 
-## 📝 Lab Steps
+## 🗺️ Learning Path
+
+```
+Dataset → Time Complexity → Space Complexity → Profiling → Optimization
+(TODO 1)    (TODO 2-3)        (TODO 4-5)        (TODO 6)     (TODO 7)
+   ↓            ↓                  ↓               ↓            ↓
+1M rows    O(N) vs O(1)      O(N) space vs    Find the     10x speedup
+  CSV     O(N²) vs O(N log N)  O(1) space    bottleneck    with O(N)
+```
+
+---
+
+## 📝 Lab Exercises
 
 Follow along in the notebook `notebooks/lab02_complexity_dataflow.ipynb`.
 
-### A. Generate the Dataset (The Red Zone 🔴)
+### Exercise 1: Dataset Generation
 
-We need a dataset large enough to break inefficient code. You will implement `generate_user_logs()` to create:
+**TODO 1: `generate_user_logs()`**
+
+We need a dataset large enough to expose inefficient code. Implement this function to create:
 
 -   **Rows**: 1,000,000
 -   **Columns**: `user_id`, `session_id`, `action`, `timestamp`, `value`
@@ -42,76 +72,106 @@ We need a dataset large enough to break inefficient code. You will implement `ge
 
 **Goal**: Save this as `data/raw/user_logs_1m.csv`.
 
-### B. Exercise 1: Search & Sort Efficiency
+---
 
-You will compare the performance impact of different data structures and algorithms.
+### Exercise 2: Time Complexity — Search & Sort
 
-**Part 1A: Search - O(N) vs O(1)**
+Compare the performance impact of different data structures and algorithms.
 
-Compare finding an item in a Python **List** versus a **Set**.
+**TODO 2: `benchmark_search()`** — O(N) vs O(1)
 
-1.  Create a list of 1M numbers.
-2.  Create a set of the same 1M numbers.
-3.  Implement `benchmark_search()` to search for 1,000 random keys in both.
-4.  Calculate the speedup.
+Compare finding an item in a Python **List** versus a **Set**:
+
+1.  Create a list and set of 1M numbers.
+2.  Search for 1,000 random keys in both.
+3.  Calculate the speedup.
 
 **What to expect**: The Set should be ~1000x faster.
 
-**Part 1B: Sort - O(N²) vs O(N log N)**
+**TODO 3: `bubble_sort()`** — O(N²) vs O(N log N)
 
-Compare sorting algorithms at different scales.
+Implement the classic bubble sort algorithm:
 
-1.  Implement `bubble_sort()` - the classic O(N²) algorithm.
-2.  Compare against Python's built-in `sorted()` (Timsort, O(N log N)).
-3.  Run benchmarks at N = 100, 1000, 5000.
-4.  Predict and verify what happens at N = 10,000.
+1.  Compare adjacent elements, swap if out of order.
+2.  Repeat until sorted.
+3.  Compare against Python's built-in `sorted()` at N = 100, 1000, 5000.
 
 **What to expect**: Python sort should be 100x+ faster at N=5000.
 
-### C. Exercise 2: The Data Flow (Memory Hierarchy)
+---
 
-You will implement three functions to load data, each representing a different approach:
+### Exercise 3: Space Complexity — Memory Trade-offs
 
-1.  **`load_full()`**: Read the whole CSV into RAM (`pd.read_csv()`). Fastest, but requires plenty of RAM.
-2.  **`load_chunked()`**: Read in blocks of 50k rows. Slower, but constant memory usage.
-3.  **`load_iterator()`**: Read line-by-line. Slowest, but minimal memory.
+Not just time — sometimes **memory** is the bottleneck.
 
-**Goal**: Understand the trade-off between **Speed** and **Memory**.
+**TODO 4: `find_duplicates_set()`**
 
-### D. Exercise 3: Identifying the Bottleneck 🔥
+- O(N) time, O(N) space — uses a set to track seen items
+- Fast but uses memory proportional to input size
 
-We provide a function `find_duplicates_slow()` that is deliberately terrible (O(N²)).
+**TODO 5: `find_duplicates_inplace()`**
 
-**Part 3A: cProfile Analysis**
+- O(N log N) time, O(1) extra space — sorts in-place
+- Memory efficient but modifies input and is slower
 
-1.  Run `find_duplicates_slow()` on a small sample (10k rows).
-2.  Implement `profile_function()` using Python's `cProfile`.
-3.  Analyze the output to find *exactly* which functions consume the most time.
+**Goal**: Understand the time-space trade-off.
 
-**Part 3B: Flamegraph Visualization**
+| Approach | Time | Space | Best When... |
+|----------|------|-------|--------------|
+| Set-based | O(N) | O(N) | Memory is plentiful, speed is critical |
+| Sort in-place | O(N log N) | O(1) | Memory is limited, data can be modified |
 
-1.  Install `py-spy`: `pip install py-spy`
-2.  Generate a flamegraph SVG of the slow function.
-3.  Open in browser and identify the widest bar (= bottleneck).
-4.  Compare with cProfile results - do they match?
+---
 
-**Part 3C: Line-by-Line Profiling**
+### Exercise 4: Profiling Bottlenecks
 
-1.  Use `line_profiler` to profile the slow function line by line.
+We provide a deliberately terrible O(N²) function: `find_duplicates_slow()`.
+
+**TODO 6: `profile_function()`**
+
+1.  Implement using Python's `cProfile`.
+2.  Run on `find_duplicates_slow()` with a small sample (2-5k rows).
+3.  Analyze the output to identify the slowest functions.
+
+**Flamegraph Visualization** (Demonstration)
+
+1.  Run the notebook cell to generate a standalone script.
+2.  Run from terminal: `py-spy record -o flamegraph.svg -- python src/flamegraph_profile.py`
+3.  Open the SVG in browser and identify the widest bar (= bottleneck).
+
+**Line-by-Line Profiling** (Demonstration)
+
+1.  Use the provided `line_profiler` cell.
 2.  Identify the exact lines that consume the most time.
-3.  Explain WHY those specific lines are slow.
 
 **Goal**: Learn that you can't optimize what you can't measure.
 
-### E. Exercise 4: The 10x Challenge 🏆
+---
+
+### Exercise 5: The 10x Challenge 🏆
+
+**TODO 7: `find_duplicates_fast()`**
 
 Your task is to refactor the slow function to be at least **10x faster**.
 
-1.  Implement `find_duplicates_fast()`.
-2.  **Strategy**: Use a Hash Map (Dictionary or `collections.Counter`) to count items in O(N).
-3.  **Bonus**: Use Sorting (O(N log N)).
+1.  **Strategy**: Use a Hash Map (Dictionary or `collections.Counter`) to count items in O(N).
+2.  **Validation**: Compare your results against the slow version.
+3.  **Bonus**: Can you make it 1000x faster?
 
 **Goal**: Prove that Algorithms > Hardware. A better algorithm on a laptop beats a bad algorithm on a supercomputer.
+
+---
+
+## 📊 Expected Results
+
+When you complete the lab successfully:
+
+| Exercise | Metric | Expected Value |
+|----------|--------|----------------|
+| TODO 2 | Set vs List speedup | ~1000x |
+| TODO 3 | Python sort vs Bubble (N=5000) | ~100-2500x |
+| TODO 4-5 | Set-based faster than in-place | Yes |
+| TODO 7 | Fast vs Slow speedup | **≥10x** (often 10,000x!) |
 
 ---
 
@@ -119,12 +179,13 @@ Your task is to refactor the slow function to be at least **10x faster**.
 
 Submit **exactly these two files**:
 
-1.  **`notebooks/lab02_complexity_dataflow.ipynb`** — Your completed notebook.
+1.  **`notebooks/lab02_complexity.ipynb`** — Your completed notebook.
 2.  **`results/lab02_metrics.json`** — The JSON file generated by the notebook.
 
 **Do NOT submit:**
 -   The 1M row CSV file (it's ~60-80MB).
 -   The `__pycache__` directories.
+-   Flamegraph SVG files.
 
 ---
 
