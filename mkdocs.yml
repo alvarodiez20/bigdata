@@ -30,10 +30,10 @@ nav:
   - Lab 01 - Setup and I/O:
     - Instructions: labs/lab01_setup_io.md
     - Tips & Reference: labs/lab01_guide.md
-  - Lab 02 - Complexity and Data Flow:
+  - Lab 02 - Complexity:
     - Instructions: labs/lab02_instructions.md
     - Tips & Reference: labs/lab02_guide.md
-  - Lab 03 - Data Types and Formats:
+  - Lab 03 - Data Types:
     - Instructions: labs/lab03_instructions.md
     - Tips & Reference: labs/lab03_guide.md
   - Lab 04 - Vectorization and Out-of-Core:
