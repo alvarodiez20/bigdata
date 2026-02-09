@@ -90,7 +90,72 @@ countries = [
 
 ---
 
-## Section B: Exercise 1 - Data Type Optimization
+## Section B: Baseline Measurement
+
+### Measuring memory accurately
+
+**Key steps:**
+
+1. **Get memory usage**: Use `df.memory_usage(deep=True)` to get a Series with memory per column
+   - Returns a Series where index = column names, values = bytes
+   - Don't forget `deep=True`!
+
+2. **Calculate total memory**: Sum all values and convert bytes to MB
+   - Bytes to MB: divide by `1e6`
+
+3. **Build the result dictionary**: Create a dict with two keys:
+   - `'total_mb'`: the total memory in MB
+   - `'columns'`: a nested dict with info for each column
+
+4. **For each column**, store:
+   - `'dtype'`: convert dtype to string with `str(df[col].dtype)`
+   - `'memory_mb'`: get memory from the Series, convert to MB
+   - `'nunique'`: use `df[col].nunique()`
+
+**Hint**: You can iterate over columns with `for col in df.columns:`
+
+### Expected output structure
+
+```python
+# Example return value:
+{
+    'total_mb': 2456.78,
+    'columns': {
+        'order_id': {
+            'dtype': 'int64',
+            'memory_mb': 38.15,
+            'nunique': 5000000
+        },
+        'product_id': {
+            'dtype': 'int64', 
+            'memory_mb': 38.15,
+            'nunique': 50000
+        },
+        'category': {
+            'dtype': 'object',
+            'memory_mb': 856.42,
+            'nunique': 15
+        },
+        # ... more columns
+    }
+}
+```
+
+### Why `deep=True` matters
+
+Without `deep=True`, pandas only counts the pointer memory for object columns, not the actual string data!
+
+```python
+# Wrong (underestimates strings)
+df.memory_usage()
+
+# Correct (includes string content)
+df.memory_usage(deep=True)
+```
+
+---
+
+## Section C: Type Analysis & Optimization
 
 ### Type Selection Guide
 
@@ -119,219 +184,190 @@ Is it numeric?
 | Type | Min | Max | Bytes |
 |------|-----|-----|-------|
 | int8 | -128 | 127 | 1 |
-| uint8 | 0 | 255 | 1 |
+| **uint8** | 0 | **255** | **1** |
 | int16 | -32,768 | 32,767 | 2 |
-| uint16 | 0 | 65,535 | 2 |
+| **uint16** | 0 | **65,535** | **2** |
 | int32 | -2.1B | 2.1B | 4 |
-| uint32 | 0 | 4.3B | 4 |
+| **uint32** | 0 | **4.3B** | **4** |
 | int64 | -9.2Q | 9.2Q | 8 |
 
-### Specifying dtypes when reading
+### Analyzing column ranges
+
+**Key steps for `analyze_column_ranges()`:**
+
+1. **Create an empty result dictionary** to store analysis for each column
+
+2. **Loop through each column** in the DataFrame
+
+3. **Check the column type**:
+   - Use `np.issubdtype(col_type, np.number)` to check if numeric
+   - Check if `col_type == 'object'` for strings
+   - Otherwise it's likely datetime or other special type
+
+4. **For numeric columns**, store:
+   - `'min'`: use `df[col].min()`
+   - `'max'`: use `df[col].max()`
+   - `'nunique'`: use `int(df[col].nunique())`
+
+5. **For string (object) columns**, store:
+   - `'nunique'`: number of unique values
+   - `'max_len'`: use `int(df[col].str.len().max())`
+   - `'sample'`: first 5 unique values as a list
+
+6. **For other types** (datetime, etc.), store:
+   - `'dtype'`: the string representation of the dtype
+   - `'nunique'`: number of unique values
+
+### Expected output structure
+
 ```python
-df = pd.read_csv('data.csv', dtype={
-    'product_id': 'uint16',      # max 50000 < 65535
-    'category': 'category',       # 15 unique values
-    'price': 'float32',           # 2 decimal precision enough
-    'quantity': 'uint8',          # max 100 < 255
-    'country': 'category',        # 30 unique values
+# Example return value:
+{
+    'order_id': {
+        'min': 0,
+        'max': 4999999,
+        'nunique': 5000000
+    },
+    'product_id': {
+        'min': 1,
+        'max': 50000,
+        'nunique': 49987
+    },
+    'category': {
+        'nunique': 15,
+        'max_len': 11,
+        'sample': ['Electronics', 'Clothing', 'Home', 'Books', 'Toys']
+    },
+    'price': {
+        'min': 0.01,
+        'max': 999.99,
+        'nunique': 99989
+    },
+    # ... more columns
+}
+```
+
+### Loading with optimized dtypes
+
+**How to specify dtypes when reading CSV:**
+
+Use the `dtype` parameter in `pd.read_csv()` to specify types for each column:
+
+```python
+df = pd.read_csv('file.csv', dtype={
+    'column_name': 'dtype_string',
+    'another_column': 'dtype_string',
+    # ... more columns
 })
 ```
 
-### Automatic downcast function
-```python
-def optimize_dtypes(df):
-    """Automatically reduce numeric types and convert low-cardinality strings."""
-    for col in df.columns:
-        col_type = df[col].dtype
-
-        if col_type == 'object':
-            # Convert strings with few unique values to category
-            if df[col].nunique() / len(df) < 0.5:
-                df[col] = df[col].astype('category')
-        elif 'int' in str(col_type):
-            df[col] = pd.to_numeric(df[col], downcast='integer')
-        elif 'float' in str(col_type):
-            df[col] = pd.to_numeric(df[col], downcast='float')
-
-    return df
-```
-
-### Expected memory reduction
-
-| Column | Before | After | Reduction |
-|--------|--------|-------|-----------|
-| product_id | int64 (8B) | uint16 (2B) | 4x |
-| category | object (~50B) | category (~2B) | 25x |
-| price | float64 (8B) | float32 (4B) | 2x |
-| quantity | int64 (8B) | uint8 (1B) | 8x |
-| country | object (~20B) | category (~2B) | 10x |
-
 ---
 
-## Section C: Exercise 2 - Format Comparison
+## Section D: Performance Impact
 
-### Writing to different formats
+### Benchmarking operations
+
+**Key steps for `benchmark_operation()`:**
+
+1. **Use an if-elif structure** to handle different operation types:
+   - `'groupby_sum'`: Group by category and sum prices
+   - `'filter'`: Filter rows where country equals a specific value
+   - `'sort'`: Sort by price column
+
+2. **For each operation type:**
+   - Time the baseline DataFrame:
+     - Start timer with `start = time.perf_counter()`
+     - Execute the operation (store result in `_` to discard it)
+     - Calculate elapsed time: `time.perf_counter() - start`
+   - Time the optimized DataFrame (same process)
+
+3. **Return a dictionary** with:
+   - `'baseline_sec'`: time for baseline (rounded to 4 decimals)
+   - `'optimized_sec'`: time for optimized (rounded to 4 decimals)
+   - `'speedup'`: baseline_sec / optimized_sec (rounded to 2 decimals)
+
+**Detailed steps for each operation:**
+
+**For `'groupby_sum'`:**
+
+1. Start timer: `start = time.perf_counter()`
+2. Execute on baseline: `_ = df_baseline.groupby('category')['price'].sum()`
+3. Calculate baseline time: `baseline_sec = time.perf_counter() - start`
+4. Start new timer: `start = time.perf_counter()`
+5. Execute on optimized: `_ = df_optimized.groupby('category')['price'].sum()`
+6. Calculate optimized time: `optimized_sec = time.perf_counter() - start`
+
+**For `'filter'`:**
+
+1. Start timer
+2. Execute on baseline: `_ = df_baseline[df_baseline['country'] == 'Spain']`
+3. Calculate baseline time
+4. Start new timer
+5. Execute on optimized: `_ = df_optimized[df_optimized['country'] == 'Spain']`
+6. Calculate optimized time
+
+**For `'sort'`:**
+
+1. Start timer
+2. Execute on baseline: `_ = df_baseline.sort_values('price')`
+3. Calculate baseline time
+4. Start new timer
+5. Execute on optimized: `_ = df_optimized.sort_values('price')`
+6. Calculate optimized time
+
+**Then for all operations**, calculate the speedup and return the dictionary.
+
+### Expected output structure
 
 ```python
-# CSV
-df.to_csv('data.csv', index=False)
-
-# Compressed CSV
-df.to_csv('data.csv.gz', index=False, compression='gzip')
-
-# Parquet with different compressions
-df.to_parquet('data_snappy.parquet', compression='snappy')
-df.to_parquet('data_gzip.parquet', compression='gzip')
-df.to_parquet('data_zstd.parquet', compression='zstd')
-df.to_parquet('data_none.parquet', compression=None)
-
-# Feather
-df.to_feather('data.feather', compression='zstd')
+# Example return value:
+{
+    'baseline_sec': 0.0234,
+    'optimized_sec': 0.0089,
+    'speedup': 2.63
+}
 ```
 
-### Reading with column selection (Parquet/Feather only)
+### Why category is faster
+
+The `category` dtype stores:
+- A dictionary of unique values: `{0: 'Electronics', 1: 'Clothing', ...}`
+- Integer codes for each row: `[0, 1, 0, 2, 1, ...]`
+
+Operations like groupby and filter use integer comparisons instead of string comparisons!
+
+### Calculating total savings
+
+**Key steps for `calculate_savings()`:**
+
+1. **Calculate memory saved:**
+   - Subtract optimized memory from baseline memory
+   - Access total memory with: `baseline_memory['total_mb']` and `optimized_memory['total_mb']`
+
+2. **Calculate memory reduction factor:**
+   - Divide baseline memory by optimized memory
+   - This tells you "how many times smaller" the optimized version is
+
+3. **Calculate average speedup:**
+   - Extract the `'speedup'` value from each benchmark result in the list
+   - Use a list comprehension: `[r['speedup'] for r in benchmark_results]`
+   - Calculate the average: `sum(speedups) / len(speedups)`
+
+4. **Return a dictionary** with:
+   - `'memory_saved_mb'`: how many MB were saved (rounded to 2 decimals)
+   - `'memory_reduction_factor'`: memory reduction factor (rounded to 2 decimals)
+   - `'avg_speedup'`: average speedup across all operations (rounded to 2 decimals)
+
+### Expected output structure
+
 ```python
-# Only read specific columns - much faster!
-df = pd.read_parquet('data.parquet', columns=['product_id', 'price', 'quantity'])
+# Example return value:
+{
+    'memory_saved_mb': 2056.34,
+    'memory_reduction_factor': 6.25,
+    'avg_speedup': 2.42
+}
 ```
-
-### Compression comparison
-
-| Codec | Speed | Ratio | Best For |
-|-------|-------|-------|----------|
-| None | Fastest | 1x | Development |
-| Snappy | Fast | 2-3x | Default, balanced |
-| LZ4 | Very Fast | 2x | Speed priority |
-| Zstd | Medium | 5-8x | Best balance |
-| Gzip | Slow | 4-6x | Compatibility |
-| Brotli | Very Slow | 8-12x | Maximum compression |
-
-### Format characteristics
-
-| Format | Type | Compression | Column Select | Schema |
-|--------|------|-------------|---------------|--------|
-| CSV | Row | No | No | No |
-| CSV.gz | Row | gzip | No | No |
-| Parquet | Column | Various | Yes | Yes |
-| Feather | Column | LZ4/Zstd | Yes | Yes |
-
----
-
-## Section D: Exercise 3 - Parquet Deep Dive
-
-### Inspecting Parquet metadata
-```python
-import pyarrow.parquet as pq
-
-# Open file for inspection
-parquet_file = pq.ParquetFile('data.parquet')
-
-# Basic info
-print(f"Row groups: {parquet_file.num_row_groups}")
-print(f"Schema: {parquet_file.schema}")
-
-# Row group details
-for i in range(parquet_file.num_row_groups):
-    rg = parquet_file.metadata.row_group(i)
-    print(f"Row group {i}: {rg.num_rows} rows")
-
-    # Column statistics
-    for j in range(rg.num_columns):
-        col = rg.column(j)
-        stats = col.statistics
-        if stats:
-            print(f"  {col.path_in_schema}: min={stats.min}, max={stats.max}")
-```
-
-### Row group size configuration
-```python
-# Smaller row groups = more parallelism, more overhead
-df.to_parquet('small_rg.parquet', row_group_size=10_000)
-
-# Larger row groups = better compression, less overhead
-df.to_parquet('large_rg.parquet', row_group_size=1_000_000)
-
-# Default is usually 64MB worth of data
-```
-
-### Predicate pushdown
-```python
-# Without filter - reads everything
-df = pd.read_parquet('data.parquet')
-
-# With filter - uses statistics to skip row groups
-df = pd.read_parquet('data.parquet',
-                     filters=[('price', '>', 100)])
-
-# Multiple conditions
-df = pd.read_parquet('data.parquet',
-                     filters=[
-                         ('price', '>', 100),
-                         ('category', '=', 'Electronics')
-                     ])
-```
-
----
-
-## Section E: Exercise 4 - Partitioning
-
-### Adding partition columns
-```python
-df['date'] = pd.to_datetime(df['timestamp'])
-df['year'] = df['date'].dt.year
-df['month'] = df['date'].dt.month
-df['day'] = df['date'].dt.day
-```
-
-### Writing partitioned data
-```python
-# Partition by year and month
-df.to_parquet(
-    'data_partitioned/',
-    partition_cols=['year', 'month'],
-    engine='pyarrow'
-)
-
-# Results in:
-# data_partitioned/
-# ├─ year=2024/
-# │  ├─ month=1/
-# │  │  └─ data-0.parquet
-# │  ├─ month=2/
-# │  │  └─ data-0.parquet
-# │  └─ ...
-```
-
-### Reading with partition filters
-```python
-# Reads only relevant partitions
-df = pd.read_parquet(
-    'data_partitioned/',
-    filters=[
-        ('year', '=', 2024),
-        ('month', '=', 1)
-    ]
-)
-```
-
-### When to partition
-
-**DO partition when:**
-- Dataset > 1 GB
-- Queries frequently filter by specific columns
-- Data has natural time/category dimensions
-- Read >> Write (analytics workloads)
-
-**DON'T partition when:**
-- Dataset < 100 MB
-- You always read the entire dataset
-- High cardinality (>10,000 unique values)
-- Very uneven distribution
-
-### Ideal partition sizing
-- **Minimum files**: 10-100
-- **Maximum files**: 10,000
-- **File size**: 100 MB - 1 GB each
 
 ---
 
@@ -340,25 +376,15 @@ df = pd.read_parquet(
 When you complete the lab, you should see something like:
 
 ```
-Exercise 1: Data Type Optimization
+Memory Analysis:
   Baseline memory: ~2,500 MB
   Optimized memory: ~400 MB
   Reduction: 6.3x
 
-Exercise 2: Format Comparison (5M rows)
-  CSV write: 45s, 520 MB
-  Parquet (zstd) write: 8s, 85 MB
-  CSV read: 35s
-  Parquet read (full): 3s
-  Parquet read (3 cols): 0.8s
-
-Exercise 3: Parquet Config
-  Row groups: varies with row_group_size
-  Predicate pushdown speedup: 2-5x
-
-Exercise 4: Partitioning
-  Query specific day: partitioned 10-50x faster
-  Full aggregation: unpartitioned slightly faster
+Performance:
+  Groupby speedup: 2-3x
+  Filter speedup: 2-4x
+  Sort speedup: 1.5-2x
 ```
 
 ---
@@ -370,8 +396,8 @@ Exercise 4: Partitioning
 | Forgetting `deep=True` in memory_usage | Always use `df.memory_usage(deep=True)` |
 | Using int64 for small ranges | Check `.min()` and `.max()`, use smallest int |
 | Not using category for repeated strings | If `nunique() / len(df) < 0.5`, use category |
-| Over-partitioning | Keep partitions 100MB-1GB, max 10K files |
-| Expecting CSV to support column selection | Only Parquet/Feather support this |
+| Specifying dtype for timestamp | Use `parse_dates=['timestamp']` separately |
+| Using signed int when values are ≥ 0 | Use unsigned types (uint8, uint16, etc.) |
 
 ---
 
@@ -379,20 +405,18 @@ Exercise 4: Partitioning
 
 - [Pandas dtype reference](https://pandas.pydata.org/docs/reference/arrays.html)
 - [Pandas Scaling Guide](https://pandas.pydata.org/docs/user_guide/scale.html)
-- [PyArrow Parquet Guide](https://arrow.apache.org/docs/python/parquet.html)
-- [Parquet Format Specification](https://parquet.apache.org/docs/)
-- [Apache Arrow](https://arrow.apache.org/)
+- [NumPy data types](https://numpy.org/doc/stable/reference/arrays.dtypes.html)
 
 ---
 
 ## 📦 Files to Submit
 
-1. `notebooks/lab03_data_types_formats.ipynb` (with all cells executed)
+1. `notebooks/lab03_data_types.ipynb` (with all cells executed)
 2. `results/lab03_metrics.json` (generated by the notebook)
 
 **Do NOT submit:**
 - Generated data files
-- Partitioned directories
+- `__pycache__` directories
 
 ---
 

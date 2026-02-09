@@ -1,6 +1,6 @@
-# Lab 03: Data Types and Efficient Formats
+# Lab 03: Data Types
 
-Welcome to the third Big Data laboratory session! In this lab, you'll learn how to dramatically reduce memory usage and improve performance through smart data type choices and efficient storage formats.
+Welcome to the third Big Data laboratory session! In this lab, you'll learn how to dramatically reduce memory usage and improve performance through smart data type choices.
 
 ## 📚 Additional Resources
 
@@ -9,10 +9,11 @@ Welcome to the third Big Data laboratory session! In this lab, you'll learn how 
 
 ## 🎯 What You Will Learn
 
-- **Data Type Optimization**: How choosing the right dtypes can reduce memory 5-10x
-- **Storage Formats**: Understanding row vs column-oriented storage (CSV vs Parquet vs Feather)
-- **Compression**: Trade-offs between different compression algorithms
-- **Partitioning**: How to structure data for fast queries on large datasets
+- **Memory Measurement**: How to accurately measure DataFrame memory usage
+- **Data Range Analysis**: How to analyze value ranges to choose optimal types
+- **Integer Sizing**: When to use uint8, uint16, uint32, etc.
+- **Category dtype**: How to optimize repeated strings for huge memory savings
+- **Performance Impact**: How smaller types lead to faster operations
 
 ## ✅ Pre-flight Checklist
 
@@ -20,22 +21,21 @@ Before starting, ensure you have:
 
 1.  **Completed Lab 02**: You understand profiling and complexity.
 2.  **Updated your repo**: Run `git pull` to get the latest changes.
-3.  **Installed dependencies**: Run `uv sync` to ensure you have `pyarrow`.
-4.  **Verify PyArrow**:
-    ```bash
-    uv run python -c "import pyarrow; print(f'PyArrow {pyarrow.__version__}')"
-    ```
+3.  **Checkout main**: Run `git checkout main`.
+4.  **Create a local branch**: Run `git checkout -b <your_branch_name>`
+5.  **Installed dependencies**: Run `uv sync`.
 
 ---
 
 ## 📝 Lab Steps
 
-Follow along in the notebook `notebooks/lab03_data_types_formats.ipynb`.
+Follow along in the notebook `notebooks/lab03_data_types.ipynb`.
 
-### A. Generate the Dataset
+### A. Generate the Dataset 
 
 We'll generate a synthetic e-commerce dataset with 5 million rows containing:
-- `order_id`: Unique order identifier
+
+- `order_id`: Unique order identifier (0 to 4,999,999)
 - `product_id`: Product ID (1-50,000)
 - `category`: Product category (15 unique values)
 - `price`: Product price (0.01 - 999.99)
@@ -43,141 +43,72 @@ We'll generate a synthetic e-commerce dataset with 5 million rows containing:
 - `country`: Customer country (30 unique values)
 - `timestamp`: Order timestamp
 
+**TODO 1**: Implement `generate_ecommerce_data()` to create the dataset.
+
 **Goal**: Create `data/raw/ecommerce_5m.csv` (~500MB).
 
 ---
 
-### B. Exercise 1: Data Type Optimization (25 min)
+### B. Baseline Measurement
 
-You will measure the impact of choosing optimal data types.
+Measure how much memory pandas wastes with default dtypes.
 
-**Part 1A: Baseline Measurement**
+**TODO 2**: Implement `measure_memory()` to measure DataFrame memory usage.
 
-1.  Read the CSV with default dtypes.
-2.  Measure total memory usage with `df.memory_usage(deep=True)`.
-3.  Analyze each column's dtype and memory.
+**What you'll observe:**
 
-**Part 1B: Type Analysis**
+- `int64` uses 8 bytes for ALL integers (even small ones!)
+- `float64` uses 8 bytes for ALL floats
+- `object` uses ~50+ bytes per string value
 
-For each column, determine the optimal type:
-- `product_id`: Range 1-50,000 → Which int type?
-- `category`: 15 unique values → `object` or `category`?
-- `price`: 0.01-999.99 → `float32` or `float64`?
-- `quantity`: 1-100 → Which int type?
-- `country`: 30 unique values → `object` or `category`?
+**Goal**: Understand the memory cost of default types.
 
-**Part 1C: Optimized Loading**
+---
 
-1.  Re-read the CSV with optimal dtypes specified.
-2.  Measure the memory reduction.
-3.  Implement `optimize_dtypes()` function for automatic optimization.
+### C. Type Analysis & Optimization 
 
-**Part 1D: Speed Impact**
+This is the core of the lab: analyze your data and choose optimal types.
 
-1.  Benchmark groupby operations on baseline vs optimized.
-2.  Benchmark filter operations.
-3.  Document the speedup.
+**TODO 3**: Implement `analyze_column_ranges()` to identify min/max/nunique for each column.
+
+**TODO 4**: Implement `get_optimal_dtypes()` to return the optimal dtype mapping:
+
+| Column | Range | Optimal Type |
+|--------|-------|--------------|
+| order_id | 0 to 5M | `uint32` (max 4.3B) |
+| product_id | 1 to 50,000 | `uint16` (max 65,535) |
+| category | 15 unique | `category` |
+| price | 0.01 to 999.99 | `float32` |
+| quantity | 1 to 100 | `uint8` (max 255) |
+| country | 30 unique | `category` |
+
+**TODO 5**: Implement `load_with_optimized_dtypes()` to load CSV with optimal types.
 
 **Goal**: Achieve >5x memory reduction.
 
 ---
 
-### C. Exercise 2: Format Comparison (30 min)
+### D. Performance Impact 
 
-You will compare different storage formats and compression algorithms.
+Smaller types aren't just about memory — they're also faster!
 
-**Part 2A: Convert to Multiple Formats**
+**TODO 6**: Implement `benchmark_operation()` to compare:
 
-Convert your optimized DataFrame to:
-- CSV (uncompressed)
-- CSV.gz (gzip compressed)
-- Parquet with Snappy compression
-- Parquet with Gzip compression
-- Parquet with Zstd compression
-- Parquet without compression
-- Feather format
+- Groupby operations
+- Filter operations  
+- Sort operations
 
-**Part 2B: Benchmark Writing**
+**TODO 7**: Implement `calculate_savings()` to summarize total improvements.
 
-For each format, measure:
-- Write time
-- File size on disk
-
-**Part 2C: Benchmark Reading**
-
-For each format, measure:
-- Full read time
-- Partial read time (3 columns only) - where supported
-
-**Part 2D: Create Comparison Table**
-
-| Format | Size (MB) | Write (s) | Read Full (s) | Read 3 cols (s) |
-|--------|-----------|-----------|---------------|-----------------|
-| CSV | ? | ? | ? | N/A |
-| ... | ... | ... | ... | ... |
-
-**Goal**: Identify the best format for different use cases.
+**Goal**: Measure the performance speedup from optimization.
 
 ---
 
-### D. Exercise 3: Parquet Deep Dive (20 min)
+### E. Reflection & Save Results (15 min)
 
-You will explore Parquet's internal structure and configuration options.
+Write a short reflection and save your metrics.
 
-**Part 3A: Inspect Metadata**
-
-1.  Use `pyarrow.parquet.ParquetFile` to inspect the file.
-2.  List the number of row groups.
-3.  Print the schema.
-4.  View statistics (min/max) for each column chunk.
-
-**Part 3B: Row Group Size Experiment**
-
-1.  Write Parquet files with different `row_group_size` values (10K, 100K, 1M).
-2.  Compare file sizes and read performance.
-
-**Part 3C: Predicate Pushdown**
-
-1.  Read Parquet without filters and measure time.
-2.  Read Parquet with filters (e.g., `price > 100`) and measure time.
-3.  Explain why filtering is faster with Parquet.
-
-**Goal**: Understand Parquet internals for optimal configuration.
-
----
-
-### E. Exercise 4: Partitioning Strategies (35 min)
-
-You will implement and benchmark different partitioning approaches.
-
-**Part 4A: Add Partition Columns**
-
-Extract date components from timestamp:
-- `year`
-- `month`
-- `day`
-
-**Part 4B: Implement Partitioning Strategies**
-
-1.  **No partitioning**: Single Parquet file
-2.  **By year/month**: Two-level partitioning
-3.  **By year/month/day**: Three-level partitioning
-4.  **By category**: Partition by product category
-
-**Part 4C: Benchmark Queries**
-
-Test each strategy with:
-- **Query 1**: Orders from a specific day
-- **Query 2**: All orders in a specific category for one month
-- **Query 3**: Full dataset aggregation
-
-**Part 4D: Analysis**
-
-- Count files generated by each strategy
-- Measure disk usage
-- Document query performance
-
-**Goal**: Understand when and how to use partitioning effectively.
+**Goal**: Complete `results/lab03_metrics.json`.
 
 ---
 
@@ -185,11 +116,12 @@ Test each strategy with:
 
 Submit **exactly these two files**:
 
-1.  **`notebooks/lab03_data_types_formats.ipynb`** — Your completed notebook.
+1.  **`notebooks/lab03_data_types.ipynb`** — Your completed notebook.
 2.  **`results/lab03_metrics.json`** — The JSON file generated by the notebook.
 
 **Do NOT submit:**
--   The generated data files (CSV, Parquet, etc.)
+
+-   The generated data files (CSV)
 -   The `__pycache__` directories
 
 ---
@@ -199,7 +131,7 @@ Submit **exactly these two files**:
 After completing this lab:
 
 1.  Check your `results/lab03_metrics.json`.
-2.  Write your reflection in the notebook.
+2.  Verify you achieved >5x memory reduction.
 3.  Submit your work!
 
 **Questions?** Check the [Tips & Reference Guide](lab03_guide.md) or ask your instructor.
