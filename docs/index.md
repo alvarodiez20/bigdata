@@ -57,15 +57,15 @@ Understanding that data types matter for performance ([see lab guide](labs/lab03
 3. **Parquet Deep Dive**: Row groups, compression, predicate pushdown
 4. **Partitioning Strategies**: Organize data for fast analytical queries
 
-### Lab 04: Vectorization and Out-of-Core Computing
+### Lab 04: Efficient Formats and Vectorization
 
-Processing data efficiently at scale ([see lab guide](labs/lab04_guide.md)):
+Combining efficient storage with fast computation ([see lab guide](labs/lab04_guide.md)):
 
-1. **Vectorization**: Replace Python loops with NumPy/Pandas (100-200x speedup)
-2. **Broadcasting**: Apply operations across arrays of different shapes
-3. **Out-of-Core Processing**: Handle datasets larger than RAM with chunking
-4. **Online Algorithms**: Calculate statistics in O(1) memory (Welford's algorithm)
-5. **Dask Introduction**: Scale Pandas to larger-than-memory datasets
+1. **Format Comparison**: CSV vs Parquet (Snappy, Zstd) vs Feather — size, speed, and features
+2. **Column Pruning & Predicate Pushdown**: Read only what you need from Parquet
+3. **Vectorization**: Replace Python loops with NumPy/Pandas (100-200x speedup)
+4. **Broadcasting**: Apply operations across arrays without explicit loops
+5. **Pipeline Optimization**: Combine format choice + vectorization for maximum performance
 
 ### Coming Soon
 
