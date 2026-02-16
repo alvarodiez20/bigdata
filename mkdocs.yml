@@ -36,7 +36,7 @@ nav:
   - Lab 03 - Data Types:
     - Instructions: labs/lab03_instructions.md
     - Tips & Reference: labs/lab03_guide.md
-  - Lab 04 - Vectorization and Out-of-Core:
+  - Lab 04 - Efficient Formats and Vectorization:
     - Instructions: labs/lab04_instructions.md
     - Tips & Reference: labs/lab04_guide.md
 
