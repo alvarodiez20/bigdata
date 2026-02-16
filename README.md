@@ -93,7 +93,7 @@ bigdata/
 | Lab 01 | Environment Setup & I/O Benchmarking | ✅ Available |
 | Lab 02 | Complexity and Data Flow | ✅ Available |
 | Lab 03 | Data Types and Efficient Formats | ✅ Available |
-| Lab 04 | Vectorization and Out-of-Core Computing | ✅ Available |
+| Lab 04 | Efficient Formats and Vectorization | ✅ Available |
 
 ## 🛠️ Technology Stack
 
