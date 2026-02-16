@@ -28,7 +28,7 @@
 
 ## 📚 About
 
-This repository contains laboratory exercises and materials for a university Big Data course. Students will learn fundamental concepts and practical skills for working with large-scale data processing.
+This repository contains laboratory exercises and materials for the UNIE Big Data course. Students will learn fundamental concepts and practical skills for working with large-scale data processing.
 
 ## 🎯 Course Topics
 
