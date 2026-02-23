@@ -67,9 +67,9 @@ Combining efficient storage with fast computation ([see lab guide](labs/lab04_gu
 4. **Broadcasting**: Apply operations across arrays without explicit loops
 5. **Pipeline Optimization**: Combine format choice + vectorization for maximum performance
 
-### Lab 06: Out-of-Core, Streaming & Parallel Processing
+### Lab 05: Out-of-Core, Streaming & Parallel Processing
 
-Processing datasets larger than RAM ([see lab guide](labs/lab06_guide.md)):
+Processing datasets larger than RAM ([see lab guide](labs/lab05_guide.md)):
 
 1. **PyArrow Direct**: When to use PyArrow vs Pandas for I/O and projection pushdown
 2. **Out-of-Core Processing**: Handle datasets that don't fit in RAM using chunking
