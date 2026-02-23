@@ -67,9 +67,19 @@ Combining efficient storage with fast computation ([see lab guide](labs/lab04_gu
 4. **Broadcasting**: Apply operations across arrays without explicit loops
 5. **Pipeline Optimization**: Combine format choice + vectorization for maximum performance
 
+### Lab 05: Out-of-Core, Streaming & Parallel Processing
+
+Processing datasets larger than RAM ([see lab guide](labs/lab05_guide.md)):
+
+1. **PyArrow Direct**: When to use PyArrow vs Pandas for I/O and projection pushdown
+2. **Out-of-Core Processing**: Handle datasets that don't fit in RAM using chunking
+3. **Online Statistics**: Compute mean/std in a single pass with Welford's algorithm
+4. **Parallelization**: Threading for I/O-bound, multiprocessing for CPU-bound tasks
+5. **Pipeline Design**: Combine chunking + parallelization for scalable processing
+
 ### Coming Soon
 
-- **Lab 05**: Parallel processing and distributed computing with PySpark
+- **Lab 07**: Distributed computing with PySpark
 
 ## 🚀 Getting Started
 

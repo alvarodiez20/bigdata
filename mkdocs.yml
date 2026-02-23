@@ -39,6 +39,9 @@ nav:
   - Lab 04 - Efficient Formats and Vectorization:
     - Instructions: labs/lab04_instructions.md
     - Tips & Reference: labs/lab04_guide.md
+  - Lab 05 - Out-of-Core, Streaming & Parallel:
+    - Instructions: labs/lab05_instructions.md
+    - Tips & Reference: labs/lab05_guide.md
 
 markdown_extensions:
   - admonition
