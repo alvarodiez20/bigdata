@@ -94,6 +94,7 @@ bigdata/
 | Lab 02 | Complexity and Data Flow | ✅ Available |
 | Lab 03 | Data Types and Efficient Formats | ✅ Available |
 | Lab 04 | Efficient Formats and Vectorization | ✅ Available |
+| Lab 06 | Out-of-Core, Streaming & Parallel Processing | ✅ Available |
 
 ## 🛠️ Technology Stack
 
