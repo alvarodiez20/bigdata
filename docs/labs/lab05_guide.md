@@ -181,7 +181,7 @@ Step-by-step help for each TODO function. **Try on your own first!**
 
 **Expected output**:
 ```
-File generated: 148.5 MB in RAM
+File generated: 438.0 MB in RAM
 Shape: (5000000, 5)
 ```
 
@@ -193,15 +193,29 @@ Shape: (5000000, 5)
 
 **Goal**: Time three approaches to reading Parquet and compute the speedup.
 
+!!! note
+    Similarly to the **Time Method A** step, in the next steps store the results in the `results` dict and print the output in the same format.
+
 **Step-by-step**:
 
+0. Create dict to store results
+   ```python
+   results = {}
+   ```
+   
 1. Time Method A (Pandas):
    ```python
    start = time.perf_counter()
    df_pandas = pd.read_parquet(WARMUP_PARQUET)
    t_pandas = time.perf_counter() - start
    ram_pandas = df_pandas.memory_usage(deep=True).sum() / 1e6
+   results['pandas'] = {
+        'time_sec': round(t_pandas, 3),
+        'ram_mb': round(df_pandas.memory_usage(deep=True).sum() / 1e6, 1)
+    }
+    print(f"pd.read_parquet:      {t_pandas:.3f}s  |  RAM: {results['pandas']['ram_mb']:.1f} MB")
    ```
+
 2. Time Method B (Arrow direct):
    ```python
    start = time.perf_counter()
@@ -219,7 +233,12 @@ Shape: (5000000, 5)
    ```python
    print(f"Speedup reading Arrow: {t_pandas / t_arrow:.1f}x faster than Pandas")
    ```
-5. Return dict with all timings.
+5. Store `speedup` in the `results` dict:
+   ```python
+   results['speedup'] = round(t_pandas / t_arrow, 1)
+   ```
+
+6. Return dict with all timings.
 
 **Expected output format**:
 ```
@@ -330,16 +349,25 @@ Total revenue: 12,345,678,901
 
 **Step-by-step**:
 
-```python
-total_sum = 0
-total_count = 0
-
-for chunk in pd.read_csv(SALES_CSV, chunksize=500_000):
-    total_sum += chunk['price'].sum()
-    total_count += len(chunk)
-
-avg_price = total_sum / total_count
-```
+1. Initialize accumulators:
+   ```python
+   total_sum = 0
+   total_count = 0
+   ```
+2. Iterate over the CSV in chunks of 500,000 rows:
+   ```python
+   for chunk in pd.read_csv(SALES_CSV, chunksize=500_000):
+   ```
+3. Inside the loop, update the accumulators with the current chunk's data:
+   ```python
+       total_sum += chunk['price'].sum()
+       total_count += len(chunk)
+   ```
+4. Calculate the final average price:
+   ```python
+   avg_price = total_sum / total_count
+   ```
+5. Return the results in a dictionary.
 
 **Return format**:
 ```python
@@ -356,16 +384,31 @@ avg_price = total_sum / total_count
 
 **Step-by-step**:
 
-```python
-results = []
-for chunk in pd.read_csv(SALES_CSV, chunksize=500_000):
-    filtered = chunk[chunk['category'] == 'Electronics']
-    results.append(filtered)
-
-electronics = pd.concat(results)
-electronics.to_parquet(ELECTRONICS_PARQUET, index=False)
-return len(electronics)
-```
+1. Initialize an empty list to store the filtered chunks:
+   ```python
+   results = []
+   ```
+2. Iterate over the CSV in chunks:
+   ```python
+   for chunk in pd.read_csv(SALES_CSV, chunksize=500_000):
+   ```
+3. Inside the loop, filter for "Electronics" and append to the list:
+   ```python
+       filtered = chunk[chunk['category'] == 'Electronics']
+       results.append(filtered)
+   ```
+4. Concatenate all filtered DataFrames into one:
+   ```python
+   electronics = pd.concat(results)
+   ```
+5. Save the combined DataFrame as a Parquet file:
+   ```python
+   electronics.to_parquet(ELECTRONICS_PARQUET, index=False)
+   ```
+6. Return the total number of filtered rows:
+   ```python
+   return len(electronics)
+   ```
 
 **Expected output**: ~4,000,000 Electronics rows (1/5 of 20M).
 
@@ -377,7 +420,9 @@ return len(electronics)
 
 **Goal**: Implement Welford's algorithm for streaming mean, variance, and std.
 
-**`update(self, x)` step-by-step**:
+**Step-by-step**:
+
+**`update(self, x)`**:
 
 ```python
 self.count += 1
@@ -411,31 +456,40 @@ return self.variance() ** 0.5
 
 **Goal**: Show that threads speed up I/O-bound file reading.
 
+!!! note
+    We use **CSV files** for the threading benchmark because CSV reading is truly I/O-bound (simple text parsing). Parquet reading involves CPU-heavy Snappy decompression, which holds the GIL and prevents threading speedup.
+
 **Step-by-step**:
 
-```python
-files = sorted(glob.glob(str(PARTITIONS_DIR / '*.parquet')))
-
-# Sequential
-start = time.time()
-dfs = [pd.read_parquet(f) for f in files]
-seq_time = time.time() - start
-
-# Threaded
-start = time.time()
-with ThreadPoolExecutor(max_workers=n_workers) as executor:
-    dfs = list(executor.map(pd.read_parquet, files))
-thread_time = time.time() - start
-
-speedup = seq_time / thread_time
-```
+1. Get the list of CSV partition files:
+   ```python
+   files = sorted(glob.glob(str(PARTITIONS_DIR / '*.csv')))
+   ```
+2. Measure the time to read all files **sequentially**:
+   ```python
+   start = time.time()
+   dfs = [pd.read_csv(f) for f in files]
+   seq_time = time.time() - start
+   ```
+3. Measure the time to read all files **in parallel using threads**:
+   ```python
+   start = time.time()
+   with ThreadPoolExecutor(max_workers=n_workers) as executor:
+       dfs = list(executor.map(pd.read_csv, files))
+   thread_time = time.time() - start
+   ```
+4. Calculate the speedup:
+   ```python
+   speedup = seq_time / thread_time
+   ```
+5. Print and return the timing results.
 
 **Return format**:
 ```python
-{'sequential_sec': 4.52, 'threaded_sec': 1.23, 'speedup': 3.7}
+{'sequential_sec': 12.5, 'threaded_sec': 4.2, 'speedup': 3.0}
 ```
 
-**Why threads work here**: Reading files is I/O-bound — the GIL is released during I/O operations, so threads can actually overlap.
+**Why threads work here**: CSV reading is I/O-bound — the GIL is released during disk reads and text parsing, so threads can overlap the I/O effectively.
 
 ---
 
@@ -445,22 +499,29 @@ speedup = seq_time / thread_time
 
 **Step-by-step**:
 
-```python
-files = sorted(glob.glob(str(PARTITIONS_DIR / '*.parquet')))
-
-# Sequential
-start = time.time()
-results_seq = [heavy_process(f) for f in files]
-seq_time = time.time() - start
-
-# Parallel
-start = time.time()
-with ProcessPoolExecutor(max_workers=n_workers) as executor:
-    results_par = list(executor.map(heavy_process, files))
-proc_time = time.time() - start
-
-speedup = seq_time / proc_time
-```
+1. Import the worker function and get the list of partition files:
+   ```python
+   from lab05_workers import heavy_process
+   files = sorted(glob.glob(str(PARTITIONS_DIR / '*.parquet')))
+   ```
+2. Measure the time to process all files **sequentially**:
+   ```python
+   start = time.time()
+   results_seq = [heavy_process(f) for f in files]
+   seq_time = time.time() - start
+   ```
+3. Measure the time to process all files **in parallel using processes**:
+   ```python
+   start = time.time()
+   with ProcessPoolExecutor(max_workers=n_workers) as executor:
+       results_par = list(executor.map(heavy_process, files))
+   proc_time = time.time() - start
+   ```
+4. Calculate the speedup:
+   ```python
+   speedup = seq_time / proc_time
+   ```
+5. Print and return the timing results.
 
 **Return format**:
 ```python
@@ -477,29 +538,39 @@ speedup = seq_time / proc_time
 
 **Step-by-step**:
 
-```python
-files = sorted(glob.glob(str(PARTITIONS_DIR / '*.parquet')))
-
-# Sequential pipeline
-start = time.time()
-results_seq = [process_partition(f) for f in files]
-final_seq = pd.concat(results_seq).groupby(level=[0, 1]).sum()
-seq_time = time.time() - start
-
-# Parallel pipeline
-start = time.time()
-with ProcessPoolExecutor(max_workers=n_workers) as executor:
-    partial_results = list(executor.map(process_partition, files))
-final_par = pd.concat(partial_results).groupby(level=[0, 1]).sum()
-par_time = time.time() - start
-
-speedup = seq_time / par_time
-print(f"Sequential: {seq_time:.2f}s")
-print(f"Parallel:   {par_time:.2f}s")
-print(f"Speedup:    {speedup:.1f}x")
-print(f"\nFinal results:")
-print(final_par)
-```
+1. Import the worker function and get the list of partition files:
+   ```python
+   from lab05_workers import process_partition
+   files = sorted(glob.glob(str(PARTITIONS_DIR / '*.parquet')))
+   ```
+2. Run the **sequential pipeline** (process partitions then concatenate and group):
+   ```python
+   start = time.time()
+   results_seq = [process_partition(f) for f in files]
+   final_seq = pd.concat(results_seq).groupby(level=[0, 1]).sum()
+   seq_time = time.time() - start
+   ```
+3. Run the **parallel pipeline** using processes:
+   ```python
+   start = time.time()
+   with ProcessPoolExecutor(max_workers=n_workers) as executor:
+       partial_results = list(executor.map(process_partition, files))
+   final_par = pd.concat(partial_results).groupby(level=[0, 1]).sum()
+   par_time = time.time() - start
+   ```
+4. Calculate the speedup:
+   ```python
+   speedup = seq_time / par_time
+   ```
+5. Print the comparison and the final results:
+   ```python
+   print(f"Sequential: {seq_time:.2f}s")
+   print(f"Parallel:   {par_time:.2f}s")
+   print(f"Speedup:    {speedup:.1f}x")
+   print(f"\nFinal results:")
+   print(final_par)
+   ```
+6. Return a dictionary with the timing results.
 
 **Return format**:
 ```python
