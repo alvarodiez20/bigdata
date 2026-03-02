@@ -9,6 +9,7 @@ STUDENT REFLECTION:
 
 import math
 import random
+from collections import deque
 from typing import List, Any
 
 class RunningMinMax:
@@ -108,18 +109,18 @@ class WelfordStats:
                            population variance (N). Defaults to True.
                            
         Returns:
-            float: The calculated variance. Returns 0.0 if count < 2 and sample is True, 
-                   or if count == 0.
+            float: The calculated variance. Returns 0.0 if count == 0.
+                   Returns 0.0 if count == 1 and sample is True (N-1 = 0).
         """
-        raise NotImplementedError("TODO 6: Implement returning the variance (handle sample vs pop and count < 2)")
+        raise NotImplementedError("TODO 6: Implement variance (check count==0 first, then count==1 and sample, then divide M2)")
 
     def std(self, sample: bool = True) -> float:
         """
         Returns the current running standard deviation.
-        
+
         Args:
             sample (bool): If True, uses sample variance. False for population.
-            
+
         Returns:
             float: The calculated standard deviation.
         """
@@ -289,3 +290,68 @@ class CountMinSketch:
             int: The estimated minimum frequency.
         """
         raise NotImplementedError("TODO 12: Return the minimum count across all hash functions")
+
+
+class SlidingWindowMean:
+    """
+    Computes the running mean over the most recent `window_size` elements.
+
+    Unlike WelfordStats (which processes the entire history), this class only
+    cares about the last `window_size` values — older elements expire and no
+    longer affect the result. This is the **Sliding Window model** of streaming.
+
+    Memory usage is O(window_size), not O(n). The window itself is bounded;
+    the stream can be infinitely long.
+
+    Examples:
+        >>> swm = SlidingWindowMean(window_size=3)
+        >>> swm.update(10.0)
+        >>> swm.update(20.0)
+        >>> swm.update(30.0)
+        >>> swm.mean()
+        20.0
+        >>> swm.update(40.0)  # 10.0 expires
+        >>> swm.mean()
+        30.0
+        >>> len(swm)
+        3
+    """
+    def __init__(self, window_size: int):
+        self.window_size = window_size
+        self._window = deque(maxlen=window_size)
+        self._sum = 0.0
+
+    def update(self, value: float) -> None:
+        """
+        Adds a new value, evicting the oldest element if the window is full.
+
+        Maintaining a running `_sum` avoids recomputing the sum from scratch
+        each time. The key insight: when the window is at capacity, the leftmost
+        element (`self._window[0]`) is about to be evicted by the next `append`.
+        Subtract it from `_sum` first, then append and add the new value.
+
+        Args:
+            value (float): The new element from the stream.
+        """
+        raise NotImplementedError(
+            "TODO 13: If window is full, subtract self._window[0] from _sum. "
+            "Then append value to _window and add value to _sum."
+        )
+
+    def mean(self) -> float:
+        """
+        Returns the mean of the elements currently in the window.
+
+        Returns:
+            float: The mean. Returns 0.0 if the window is empty.
+        """
+        raise NotImplementedError("TODO 14: Return _sum / len(_window), or 0.0 if empty")
+
+    def __len__(self) -> int:
+        """
+        Returns the number of elements currently in the window.
+
+        Returns:
+            int: Current fill level, between 0 and window_size.
+        """
+        raise NotImplementedError("TODO 15: Return the current number of elements in the window")

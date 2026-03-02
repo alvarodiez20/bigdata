@@ -99,6 +99,16 @@ A **Bloom Filter** is a probabilistic data structure used to test whether an ele
 
 *Tip for Implementation*: Since true independent hash functions are hard to come by, a common trick is to use one or two hash functions (like `hash()` and `mmh3`) and combine them linearly: `hash_i(x) = (hash1(x) + i * hash2(x)) % m`. For this lab, simply using Python's built-in `hash()` seeded differently or concatenated with the index will suffice.
 
+!!! warning "Python's `hash()` is randomized per process"
+    Since Python 3.3, the built-in `hash()` is salted with a random seed at startup
+    (`PYTHONHASHSEED`). This means `hash("apple")` returns a **different value** each
+    time you run Python. For this lab that is fine — tests check structural properties
+    (membership, frequency bounds), not specific bit positions.
+
+    In production, however, you must use a **stable hash** such as `hashlib.md5` or the
+    `mmh3` (MurmurHash3) library. Without a stable hash, a Bloom filter cannot be
+    serialized, shared between processes, or reloaded from disk.
+
 ---
 
 ## 5. Count-Min Sketch
@@ -115,3 +125,32 @@ A **Count-Min Sketch (CMS)** is a probabilistic data structure that serves as a 
 Because collisions only cause counts to *increase*. The true count will be recorded in every cell the element hashes to. Intrusions from other elements will push the counts higher. The minimum value across the $d$ cells is the one least affected by collisions and therefore provides the tightest upper bound on the true frequency.
 
 **Complexity:** $O(d)$ time per operation, $O(w \times d)$ space.
+
+---
+
+## 6. Sliding Window Mean
+
+All previous algorithms operate in the **Cash Register** or **Turnstile** model: every element ever seen contributes to the result. The **Sliding Window** model is different — we only care about the **most recent $w$ elements**. Older data expires.
+
+**Use cases:** rolling average of server latency over the last 60 seconds, moving average of stock prices, trending topics over the last hour.
+
+**How it works:**
+
+Maintain a bounded circular buffer (a `deque` with `maxlen=w`) and a running sum:
+
+1. When the window is not yet full, simply append the new value and add it to the sum.
+2. When the window **is** full and a new value arrives:
+    - Subtract `window[0]` (the oldest element, about to be evicted) from the running sum.
+    - Append the new value (this automatically evicts `window[0]` in a `deque` with `maxlen`).
+    - Add the new value to the running sum.
+3. The current mean is `sum / len(window)`.
+
+**Complexity:** $O(1)$ time per update, $O(w)$ memory — independent of how long the stream runs.
+
+**Why not just recompute the mean each time?**
+With a window of size $w = 1000$ and a stream running for 1 billion steps, recomputing the mean from the window contents each step would cost $O(w)$ per update. The running-sum trick keeps it $O(1)$.
+
+!!! note "Extending to min/max is harder"
+    Tracking the **minimum** or **maximum** of a sliding window in $O(1)$ per update requires
+    a **monotone deque** (also called a deque-based sliding window minimum). This is a classic
+    competitive programming trick — worth exploring once you are comfortable with the mean.

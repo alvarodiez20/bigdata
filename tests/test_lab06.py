@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from src.lab06 import RunningMinMax, WelfordStats, ReservoirSampling, BloomFilter, CountMinSketch
+from src.lab06 import RunningMinMax, WelfordStats, ReservoirSampling, BloomFilter, CountMinSketch, SlidingWindowMean
 
 def test_min_max():
     """
@@ -77,11 +77,11 @@ def test_welford_stats_edge_cases():
     assert ws.variance(sample=True) == 0.0
     assert ws.std(sample=True) == 0.0
     
-    # N=1 state (division by N-1 exception guard)
+    # N=1 state (guard against dividing by N-1=0 for sample variance)
     ws.update(5.0)
     assert ws.mean() == 5.0
-    assert ws.variance(sample=True) == 0.0
-    assert ws.variance(sample=False) == 0.0 # dividing by N=1 -> 0
+    assert ws.variance(sample=True) == 0.0   # N-1 = 0, so return 0.0 by convention
+    assert ws.variance(sample=False) == 0.0  # M2 = 0 after one element; 0/N = 0
     
     # Numerical stability check (Huge offset with small variance)
     ws_large = WelfordStats()
@@ -134,16 +134,30 @@ def test_reservoir_edge_cases():
 
 def test_bloom():
     """
-    Tests basic membership and negative match checks for Bloom filters.
+    Tests membership guarantees: no false negatives, and bounded false positive rate.
+
+    Why this is important:
+    1. A Bloom filter guarantees zero false negatives — if an item was added, contains()
+       MUST return True. This is an absolute guarantee, not probabilistic.
+    2. False positives are bounded by theory. With size=1000, k=3, n=5 items,
+       the theoretical FPR is ~0.00014%, so we expect 0 false positives across 200 trials.
+       Testing a single unseen string like 'cherry' is fragile (it IS probabilistic);
+       testing many unseen strings gives a statistically robust bound.
     """
-    bf = BloomFilter(size=100, num_hash_functions=3)
-    bf.add("apple")
-    bf.add("banana")
-    
-    assert bf.contains("apple") is True
-    assert bf.contains("banana") is True
-    # 'cherry' might be a false positive, but with size=100 and k=3, extremely unlikely.
-    assert bf.contains("cherry") is False
+    bf = BloomFilter(size=1000, num_hash_functions=3)
+    added_items = ["apple", "banana", "cherry", "date", "elderberry"]
+    for item in added_items:
+        bf.add(item)
+
+    # No false negatives — every added item MUST be found (hard guarantee).
+    for item in added_items:
+        assert bf.contains(item) is True
+
+    # False positive rate check across many unseen items.
+    # Theoretical FPR ≈ 0.00014% → expect 0 FPs out of 200 trials.
+    unseen = [f"unseen_item_{i}" for i in range(200)]
+    fp_count = sum(1 for w in unseen if bf.contains(w))
+    assert fp_count < 5, f"False positive rate too high: {fp_count}/200"
 
 def test_bloom_edge_cases():
     """
@@ -184,6 +198,54 @@ def test_count_min():
     assert estimate_apple >= 2
     assert estimate_banana >= 1
     assert estimate_cherry >= 0
+
+def test_sliding_window_mean():
+    """
+    Tests that the mean tracks only the most recent window_size elements.
+    """
+    swm = SlidingWindowMean(window_size=3)
+    swm.update(10.0)
+    swm.update(20.0)
+    swm.update(30.0)
+    assert pytest.approx(swm.mean()) == 20.0  # (10+20+30)/3
+
+    swm.update(40.0)  # 10.0 expires
+    assert pytest.approx(swm.mean()) == 30.0  # (20+30+40)/3
+
+    swm.update(50.0)  # 20.0 expires
+    assert pytest.approx(swm.mean()) == 40.0  # (30+40+50)/3
+
+    assert len(swm) == 3
+
+
+def test_sliding_window_mean_edge_cases():
+    """
+    Tests edge cases: empty window, stream shorter than window, window of size 1.
+
+    Why this is important:
+    1. Before any updates, mean() must not crash and should return a sensible default (0.0).
+    2. If fewer items arrive than the window size, the window holds all of them — it
+       should NOT divide by window_size, but by the actual number of elements seen.
+    3. A window of size 1 should always reflect only the latest value.
+    """
+    # Empty window
+    swm = SlidingWindowMean(window_size=5)
+    assert swm.mean() == 0.0
+    assert len(swm) == 0
+
+    # Stream shorter than window
+    swm.update(10.0)
+    swm.update(20.0)
+    assert len(swm) == 2
+    assert pytest.approx(swm.mean()) == 15.0  # (10+20)/2, NOT (10+20)/5
+
+    # Window of size 1
+    swm1 = SlidingWindowMean(window_size=1)
+    swm1.update(100.0)
+    assert pytest.approx(swm1.mean()) == 100.0
+    swm1.update(999.0)
+    assert pytest.approx(swm1.mean()) == 999.0  # previous value fully expired
+
 
 def test_count_min_edge_cases():
     """
