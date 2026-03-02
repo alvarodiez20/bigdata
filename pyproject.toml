@@ -1,6 +1,6 @@
 [project]
 name = "bigdata"
-version = "0.5.1"
+version = "0.6.0"
 description = "Big Data Course Labs"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -21,9 +21,15 @@ dev = [
     "click==8.2.1",
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.7.1",
+    "pytest>=8.0.0",
 ]
 
 lab02 = [
     "py-spy>=0.3.14",
     "line-profiler>=4.1.2",
+]
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "."
 ]

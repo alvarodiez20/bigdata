@@ -47,6 +47,7 @@ site/
 # Lab solutions (instructor only)
 notebooks/*_solutions.py
 notebooks/*_solutions.ipynb
+src/*_solutions.py
 
 # Keep results directory but ignore large files
 !results/.gitkeep

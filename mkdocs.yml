@@ -42,6 +42,9 @@ nav:
   - Lab 05 - Out-of-Core, Streaming & Parallel:
     - Instructions: labs/lab05_instructions.md
     - Tips & Reference: labs/lab05_guide.md
+  - Lab 06 - Streaming Algorithms:
+    - Instructions: labs/lab06_instructions.md
+    - Tips & Reference: labs/lab06_guide.md
 
 markdown_extensions:
   - admonition
@@ -49,6 +52,13 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.highlight:
       anchor_linenums: true
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 
 # Watch additional directories for auto-reload
 watch:

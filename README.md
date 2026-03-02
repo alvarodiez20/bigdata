@@ -95,6 +95,7 @@ bigdata/
 | Lab 03 | Data Types and Efficient Formats | ✅ Available |
 | Lab 04 | Efficient Formats and Vectorization | ✅ Available |
 | Lab 05 | Out-of-Core, Streaming & Parallel Processing | ✅ Available |
+| Lab 06 | Streaming Algorithms | ✅ Available |
 
 ## 🛠️ Technology Stack
 
