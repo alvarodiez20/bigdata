@@ -17,9 +17,9 @@ Welcome to Lab 07! This lab has two parts:
    ```bash
    uv sync
    ```
-5. Run the test suite (all tests will fail until you implement the functions):
+5. Run the test suites (all tests will fail until you implement the functions):
    ```bash
-   uv run pytest tests/test_lab07.py -v
+   uv run pytest tests/test_lab07.py tests/test_lab07_polars.py -v
    ```
 
 ---
@@ -51,6 +51,7 @@ Implement the `HyperLogLog` class:
 4. **`estimate()`** (TODO 6): Compute the cardinality estimate using the harmonic mean formula and bias correction. Apply small range correction when appropriate (see guide for formulas).
 
     The formulas you need:
+    
     - Bias correction: $\alpha_m = \frac{0.7213}{1 + 1.079/m}$
     - Raw estimate: $E = \alpha_m \cdot m^2 \cdot \left(\sum_{j=0}^{m-1} 2^{-\text{registers}[j]}\right)^{-1}$
     - Small range: if $E \le 2.5 \cdot m$ and any register is 0, use $E^* = m \cdot \ln(m / V)$ where $V$ = number of zero registers.
@@ -77,7 +78,7 @@ Implement the `TDigest` class. The `Centroid` dataclass and `_compress()` method
 
 ## Part B — Polars & PySuricata
 
-You will edit **`src/lab07_polars.py`**. This part does **not** use pytest — you run the script directly.
+You will edit **`src/lab07_polars.py`**. Exercises 4a–4d are validated with `pytest` using synthetic data (no download needed). Exercise 5 is run directly as a script.
 
 ### Exercise 4: Introduction to Polars (TODOs 10–13)
 
@@ -91,7 +92,9 @@ The script automatically downloads the **NYC Yellow Taxi Trip Records** dataset 
 3. **`filter_and_group(df)`** (TODO 12): Filter trips where `trip_distance > 2.0`, group by `PULocationID`, and compute the mean `fare_amount`. Use `pl.col()` expressions.
 4. **`add_computed_column(df)`** (TODO 13): Add a new column `"tip_percentage"` computed as `(tip_amount / total_amount) * 100` using `with_columns`. Handle division by zero with `.fill_nan(0.0).fill_null(0.0)`.
 
-Run the script to see the results:
+**Validation**: Run `uv run pytest tests/test_lab07_polars.py -v`
+
+Run the full script against the real dataset to see the results:
 ```bash
 uv run python src/lab07_polars.py
 ```
@@ -117,11 +120,16 @@ open taxi_report.html
 
 ## What to Submit
 
-When you are finished and `uv run pytest tests/test_lab07.py` shows **100% passing tests**, you are done with Part A!
+When you are finished and both test suites pass, you are done with Parts A and B:
+
+```bash
+uv run pytest tests/test_lab07.py tests/test_lab07_polars.py -v
+```
 
 **Before submitting**, make sure to write a short paragraph in the `STUDENT REFLECTION` section at the top of both files.
 
 Submit **exactly**:
+
 1. **`src/lab07.py`** — Your completed probabilistic data structures.
 2. **`src/lab07_polars.py`** — Your Polars and PySuricata exercises.
 3. **`taxi_report.html`** — The PySuricata report you generated.
