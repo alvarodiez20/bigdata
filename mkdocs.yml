@@ -45,6 +45,9 @@ nav:
   - Lab 06 - Streaming Algorithms:
     - Instructions: labs/lab06_instructions.md
     - Tips & Reference: labs/lab06_guide.md
+  - Lab 07 - Probabilistic Data Structures & Polars:
+    - Instructions: labs/lab07_instructions.md
+    - Tips & Reference: labs/lab07_guide.md
 
 markdown_extensions:
   - admonition
