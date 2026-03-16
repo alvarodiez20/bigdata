@@ -1,4 +1,4 @@
-# Big Data Course Labs 🐜
+# Big Data Course Labs
 
 [![CI Status](https://github.com/alvarodiez20/bigdata/actions/workflows/ci.yml/badge.svg)](https://github.com/alvarodiez20/bigdata/actions/workflows/ci.yml)
 [![Docs Status](https://github.com/alvarodiez20/bigdata/actions/workflows/docs.yml/badge.svg)](https://github.com/alvarodiez20/bigdata/actions/workflows/docs.yml)
@@ -9,37 +9,37 @@
 
 <div align="center">
   <img src="docs/bigdata_logo.png" alt="Big Data Logo" width="300">
-  
-  <h3>Big Data Course Labs</h3>
-  
+
   <p>
     <strong>Fundamental concepts and practical skills for working with large-scale data processing</strong>
   </p>
-  
+
   <p>
-    <a href="#-quick-start">Quick Start</a> •
+    <a href="#quick-start">Quick Start</a> •
     <a href="https://alvarodiez20.github.io/bigdata/">Documentation</a> •
-    <a href="#-course-topics">Topics</a> •
-    <a href="#-labs">Labs</a>
+    <a href="#labs">Labs</a>
   </p>
 </div>
 
 ---
 
-## 📚 About
+## About
 
-This repository contains laboratory exercises and materials for the UNIE Big Data course. Students will learn fundamental concepts and practical skills for working with large-scale data processing.
+This repository contains laboratory exercises and materials for the UNIE Big Data course. Students learn fundamental concepts and practical skills for working with large-scale data processing.
 
-## 🎯 Course Topics
+## Course Topics
 
 - Environment setup and package management
 - File I/O performance (CSV vs Parquet)
 - Data processing with pandas and numpy
 - Performance benchmarking and optimization
-- Computational complexity (Big O) and data flow
-- Big data formats and storage
+- Computational complexity (Big O) and profiling
+- Data type optimization and storage formats
+- Out-of-core, streaming, and parallel processing
+- Probabilistic data structures (Bloom filters, HyperLogLog, Count-Min Sketch)
+- Kernel approximation methods (RFF, ORF, Nyström)
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -66,57 +66,54 @@ This repository contains laboratory exercises and materials for the UNIE Big Dat
 
 4. **Start working on labs**
    ```bash
-   # Open the first lab notebook
    uv run jupyter lab notebooks/lab01_setup_io.ipynb
    ```
 
-## 📖 Documentation
+## Documentation
 
 Full course documentation is available at: **[alvarodiez20.github.io/bigdata](https://alvarodiez20.github.io/bigdata/)**
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 bigdata/
 ├── docs/              # Course documentation (MkDocs)
 │   └── labs/          # Lab instructions and guides
 ├── notebooks/         # Jupyter notebooks for labs
-├── src/               # Source code and utilities
+├── src/               # Source code and lab scripts
 ├── tests/             # Test files
 └── pyproject.toml     # Project dependencies
 ```
 
-## 🧪 Labs
+## Labs
 
-| Lab | Topic | Status |
-|-----|-------|--------|
-| Lab 01 | Environment Setup & I/O Benchmarking | ✅ Available |
-| Lab 02 | Complexity and Data Flow | ✅ Available |
-| Lab 03 | Data Types and Efficient Formats | ✅ Available |
-| Lab 04 | Efficient Formats and Vectorization | ✅ Available |
-| Lab 05 | Out-of-Core, Streaming & Parallel Processing | ✅ Available |
-| Lab 06 | Streaming Algorithms | ✅ Available |
+| Lab | Topic |
+|-----|-------|
+| Lab 01 | Environment Setup & I/O Benchmarking |
+| Lab 02 | Complexity Analysis and Profiling |
+| Lab 03 | Data Types and Efficient Formats |
+| Lab 04 | Vectorization and Broadcasting |
+| Lab 05 | Out-of-Core, Streaming & Parallel Processing |
+| Lab 06 | Streaming Algorithms |
+| Lab 07 | Probabilistic Data Structures & Polars |
+| Lab 08 | Kernel Approximation Methods |
 
-## 🛠️ Technology Stack
+## Technology Stack
 
-- **Python 3.11+** - Programming language
-- **uv** - Fast Python package manager
-- **pandas** - Data manipulation and analysis
-- **numpy** - Numerical computing
-- **Jupyter** - Interactive notebooks
-- **MkDocs Material** - Documentation site
+- **Python 3.11+** — programming language
+- **uv** — fast Python package manager
+- **pandas / numpy** — data manipulation and numerical computing
+- **scipy** — scientific computing (linear algebra, statistics)
+- **polars** — high-performance DataFrame library
+- **pyarrow / Parquet** — columnar storage format
+- **matplotlib** — visualization
+- **Jupyter** — interactive notebooks
+- **MkDocs Material** — documentation site
 
-## 📝 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
-## 👤 Author
+## Author
 
-**Álvaro Díez**
-- GitHub: [@alvarodiez20](https://github.com/alvarodiez20)
-
----
-
-<p align="center">
-  Made with ❤️ for Big Data education
-</p>
+**Álvaro Díez** — [@alvarodiez20](https://github.com/alvarodiez20)
