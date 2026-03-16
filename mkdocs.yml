@@ -48,6 +48,9 @@ nav:
   - Lab 07 - Probabilistic Data Structures & Polars:
     - Instructions: labs/lab07_instructions.md
     - Tips & Reference: labs/lab07_guide.md
+  - Lab 08 - Kernel Approximation Methods:
+    - Instructions: labs/lab08_instructions.md
+    - Tips & Reference: labs/lab08_guide.md
 
 markdown_extensions:
   - admonition

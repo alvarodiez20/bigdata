@@ -6,17 +6,20 @@ Tests use the solutions module so they can be run against both the template
 """
 
 import math
+import warnings
 
 import numpy as np
 import pytest
 
-from src.lab08_solutions import (
+from src.lab08 import (
     approximation_error,
+    benchmark_methods,
     kernel_ridge_fit,
     kernel_ridge_predict,
     nystrom_features,
     nystrom_kernel_approx,
     orf_features,
+    plot_results,
     rbf_kernel,
     rbf_kernel_matrix,
     rff_features,
@@ -116,6 +119,19 @@ class TestRbfKernelMatrix:
             for j in range(10):
                 expected = rbf_kernel(X[i], X[j], 1.5)
                 assert K[i, j] == pytest.approx(expected, abs=1e-8)
+
+    def test_large_n_emits_resource_warning(self, rng):
+        """rbf_kernel_matrix must emit a ResourceWarning when n > 5_000."""
+        X = rng.standard_normal((5_001, 2))
+        with pytest.warns(ResourceWarning):
+            rbf_kernel_matrix(X, sigma=1.0)
+
+    def test_small_n_no_warning(self, small_dataset):
+        """No ResourceWarning should be emitted for n <= 5_000."""
+        X, _ = small_dataset
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", ResourceWarning)
+            rbf_kernel_matrix(X, sigma=1.0)  # must not raise
 
 
 # ---------------------------------------------------------------------------
@@ -366,9 +382,7 @@ class TestApproximationError:
 
 class TestBenchmarkMethods:
     def test_returns_list_of_dicts(self):
-        results = __import__(
-            "src.lab08_solutions", fromlist=["benchmark_methods"]
-        ).benchmark_methods(
+        results = benchmark_methods(
             n_values=[100, 200], D_values=[20, 40], d=5, sigma=1.0
         )
         assert isinstance(results, list)
@@ -382,9 +396,7 @@ class TestBenchmarkMethods:
             assert "approx_error" in r
 
     def test_methods_present(self):
-        results = __import__(
-            "src.lab08_solutions", fromlist=["benchmark_methods"]
-        ).benchmark_methods(
+        results = benchmark_methods(
             n_values=[100], D_values=[20], d=5, sigma=1.0
         )
         methods = {r["method"] for r in results}
@@ -393,16 +405,13 @@ class TestBenchmarkMethods:
         assert "Nyström" in methods
 
     def test_time_positive(self):
-        results = __import__(
-            "src.lab08_solutions", fromlist=["benchmark_methods"]
-        ).benchmark_methods(
+        results = benchmark_methods(
             n_values=[100], D_values=[20], d=5, sigma=1.0
         )
         for r in results:
             assert r["time_s"] >= 0.0
 
     def test_plot_returns_figure(self):
-        from src.lab08_solutions import benchmark_methods, plot_results
         import matplotlib.pyplot as plt
         results = benchmark_methods(
             n_values=[100, 200], D_values=[20, 40], d=5, sigma=1.0

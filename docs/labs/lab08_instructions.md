@@ -37,9 +37,19 @@ You will edit **`src/lab08.py`**.
 
     $$K(x, y) = \exp\!\left(-\frac{\|x - y\|^2}{2\sigma^2}\right)$$
 
-2. **`rbf_kernel_matrix(X, sigma)`** (TODO 2): Compute the full n×n Gram matrix using vectorised numpy (avoid a Python double loop). Emit a `ResourceWarning` when `n > 5_000`.
+2. **`rbf_kernel_matrix(X, sigma)`** (TODO 2): Compute the full n×n Gram matrix where `K[i, j] = rbf_kernel(X[i], X[j], sigma)`.
 
-    **Hint**: use the identity $\|x-y\|^2 = \|x\|^2 + \|y\|^2 - 2x^\top y$ and broadcasting.
+    A Python double loop would call `rbf_kernel` $n^2$ times — correct but ~100× slower than numpy. Instead, compute **all pairwise distances at once** using the algebraic identity:
+
+    $$\|x_i - x_j\|^2 = \|x_i\|^2 + \|x_j\|^2 - 2\,x_i^\top x_j$$
+
+    This breaks into three numpy operations you can assemble into an `(n, n)` matrix:
+
+    - **Squared row norms**: a vector of length $n$ where entry $i$ is $\|x_i\|^2$.
+    - **Outer sum of norms**: add that vector to itself transposed — broadcasting turns two `(n,)` vectors into an `(n, n)` matrix.
+    - **Inner products**: `X @ X.T` gives all $x_i^\top x_j$ at once, also `(n, n)`.
+
+    Clamp the result to zero before the `exp` (floating point can produce values like `-1e-14` on the diagonal). Finally emit a `ResourceWarning` when `n > 5_000`.
 
 **Validation**:
 ```bash
@@ -70,8 +80,14 @@ uv run python src/lab08.py
 
 **Validation**:
 ```bash
-uv run pytest tests/test_lab08.py -k "TestRff" -v
+uv run pytest tests/test_lab08.py -k "TestRff and not quality" -v
 ```
+
+!!! note
+    The `test_approximation_quality` test requires TODO 13 (`approximation_error`) to be implemented first. Run it once you reach Exercise 5:
+    ```bash
+    uv run pytest tests/test_lab08.py -k "TestRff" -v
+    ```
 
 ---
 
@@ -153,10 +169,7 @@ uv run pytest tests/test_lab08.py -k "TestKernelRidge or TestApprox" -v
 
     Return a list of dicts with keys: `method`, `n`, `D`, `time_s`, `memory_mb`, `approx_error`.
 
-2. **`plot_results(results)`** (TODO 15): Produce a 3-panel figure:
-    - Panel 1: Wall-clock time vs n (log-log)
-    - Panel 2: Peak memory vs n (log-log)
-    - Panel 3: Approximation error vs D
+2. **`plot_results(results)`**: Already implemented for you — call it after `benchmark_methods` to visualise the results.
 
 **Validation**:
 ```bash
