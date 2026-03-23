@@ -528,7 +528,247 @@ For ensemble output, **spaghetti plots** draw a single contour (e.g., the 1000 h
 
 ---
 
-## Further Reading
+## 10. GFS and ECMWF Grids: A Practical Reference
+
+This section provides a hands-on reference for working with the two most important global NWP products: NOAA's **GFS** and ECMWF's **IFS**. It covers their grid geometry, release schedules, vertical structure, available variables, and the way forecast error grows with lead time — illustrated with code centred on the Iberian Peninsula.
+
+---
+
+### 10.1 Grid Geometry
+
+The two models use fundamentally different horizontal discretisations.
+
+#### GFS — Regular Latitude–Longitude Grid
+
+Since the FV3 dynamical core (2019), GFS output is *distributed* on a regular 0.25° × 0.25° latitude–longitude grid (there is also a 0.5° and 1.0° product for legacy users). "Regular lat–lon" means every grid cell subtends the same angular size, so cell area shrinks toward the poles.
+
+| Property | Value |
+|---|---|
+| Grid type | Regular Gaussian / lat-lon (distribution product) |
+| Horizontal spacing | 0.25° ≈ 28 km at the equator, ≈ 20 km at 45° N |
+| Coverage | 90° S – 90° N, 0° – 359.75° E |
+| Points (0.25°) | 1440 × 721 = 1,038,240 per level |
+| Native model grid | Cubed-sphere C768 (≈ 13 km) — regridded to lat-lon for distribution |
+
+#### ECMWF IFS — Octahedral Reduced Gaussian Grid
+
+ECMWF's IFS uses a **spectral** approach internally (truncation T$_\text{co}$1279) but stores its output on a reduced octahedral Gaussian grid or, for most users, on a regular 0.1° grid. The octahedral grid varies the number of points per latitude ring so that all grid cells have roughly equal area — essential for spectral transforms.
+
+| Property | Value |
+|---|---|
+| Grid type | Octahedral reduced Gaussian (native); regular 0.1° lat-lon (open data) |
+| Horizontal spacing | ≈ 9 km native; 0.1° ≈ 11 km at 40° N (open data product) |
+| Coverage | 90° S – 90° N, 0° – 359.9° E |
+| Points (0.1°) | 3600 × 1801 = 6,483,600 per level |
+| Native spectral truncation | T$_\text{co}$1279 (wavenumber space) |
+
+---
+
+### 10.2 Visualising the Grids over the Iberian Peninsula
+
+The plot below shows all grid nodes for both models over the Iberian Peninsula in Lambert Conformal projection. GFS nodes are shown in blue; ECMWF 0.1° nodes in orange (subsampled every other node to avoid overplotting). See `src/scripts/plot_gfs_ecmwf_grids.py` for the source code.
+
+![GFS vs ECMWF grid nodes over the Iberian Peninsula](img/gfs_vs_ecmwf_grid_iberia.png)
+
+**What the plot reveals**:
+
+- Each GFS 0.25° cell covers roughly **28 km × 20 km** at 40° N. Over the Peninsula (~15° × 10°) there are ≈ 60 × 40 = 2,400 GFS nodes.
+- Each ECMWF 0.1° cell covers roughly **11 km × 11 km** at 40° N — about 6× denser in area. The same domain holds ≈ 150 × 95 = 14,250 ECMWF nodes.
+- Complex topography (Pyrenees, Sistema Central, Sierra Nevada) is better resolved in the ECMWF grid, though the effective resolution is ~2–3× the nominal grid spacing due to spectral smoothing.
+
+---
+
+### 10.3 Forecast Release Schedule
+
+Both models cycle through multiple **runs** per day. A *run* (or *cycle*) is identified by its **reference time** (also called *initialisation time* or *T+0*), always expressed in UTC.
+
+#### GFS Release Schedule
+
+| Run | Analysis cut-off | First output available (approx.) |
+|---|---|---|
+| 00 UTC | ~03:30 UTC | ~04:30 UTC (18 h forecast) |
+| 06 UTC | ~09:30 UTC | ~10:30 UTC |
+| 12 UTC | ~15:30 UTC | ~16:30 UTC |
+| 18 UTC | ~21:30 UTC | ~22:30 UTC |
+
+GFS ingests observations in a **6-hour data window** centred on the analysis time (±3 h), runs 3D-Var/EnKF data assimilation, and then launches the forecast integration. The 00 UTC and 12 UTC runs produce the full **384-hour (16-day) deterministic forecast**; the 06 UTC and 18 UTC runs are truncated to 240 hours. GEFS ensemble runs (31 members) are launched from the 00 and 12 UTC cycles out to 840 hours (35 days).
+
+**Latency from observation to availability**: the end-to-end pipeline (observation collection via GTS → quality control → data assimilation → forecast integration → post-processing → dissemination) typically takes **3.5–5 hours** for the 00 and 12 UTC cycles. Data are published incrementally to NOAA's NOMADS servers as each forecast hour completes.
+
+#### ECMWF IFS Release Schedule
+
+| Run | Analysis cut-off | Deterministic available | ENS available |
+|---|---|---|---|
+| 00 UTC | ~06:00 UTC | ~08:30 UTC | ~12:00 UTC |
+| 12 UTC | ~18:00 UTC | ~20:30 UTC | ~00:00 UTC (+1 day) |
+
+ECMWF runs two main cycles per day. The 12-hour **4D-Var** window means the 00 UTC analysis ingests observations from 21 UTC the previous day to 03 UTC, while the 12 UTC analysis uses 09–15 UTC observations.
+
+The **ECMWF open data** initiative (launched 2022) publishes a subset of the deterministic and ensemble output at 0.25° resolution freely, with a delay of ~3 hours after model availability. The full-resolution 0.1° product requires a commercial licence or a member-state agreement.
+
+---
+
+### 10.4 Forecast Horizons and Temporal Resolution
+
+#### GFS Temporal Output Structure
+
+| Lead time range | Output interval | Steps |
+|---|---|---|
+| 0 – 120 h | Every 1 hour | 121 steps |
+| 123 – 384 h | Every 3 hours | 88 steps |
+
+**Total**: 209 time steps per full 00/12 UTC run.
+
+#### ECMWF IFS Temporal Output Structure
+
+| Product | Lead time range | Output interval |
+|---|---|---|
+| Deterministic (HRES) | 0 – 90 h | Every 1 hour |
+| Deterministic (HRES) | 93 – 240 h | Every 3 hours |
+| Ensemble (ENS) | 0 – 144 h | Every 3 hours |
+| Ensemble (ENS) | 147 – 360 h | Every 6 hours |
+| Extended range (EPS-LR) | 0 – 1104 h (46 days) | Every 6 hours |
+
+The deterministic **HRES** run uses T$_\text{co}$1279 (≈ 9 km). The ensemble **ENS** runs 51 members (1 control + 50 perturbed) at T$_\text{co}$639 (≈ 18 km). The extended-range forecast is produced on Thursdays and Mondays.
+
+---
+
+### 10.5 Vertical Structure: Layers and Pressure Levels
+
+Both models use **hybrid sigma-pressure coordinates** for their native vertical grid, transitioning from terrain-following (σ) near the surface to pure pressure levels in the stratosphere.
+
+#### GFS Vertical Levels
+
+| Specification | Value |
+|---|---|
+| Native vertical levels | 127 hybrid levels |
+| Top of atmosphere | 0.2 hPa (~60 km, lower mesosphere) |
+| Near-surface levels | ~20 levels below 1 km AGL |
+| Output pressure levels (standard) | 34 mandatory levels |
+
+**GFS standard output pressure levels (hPa)**:
+```
+1000, 975, 950, 925, 900, 875, 850, 825, 800, 775, 750, 725, 700,
+650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100, 70, 50,
+30, 20, 10, 7, 5, 3, 2, 1
+```
+
+#### ECMWF IFS Vertical Levels
+
+| Specification | Value |
+|---|---|
+| Native model levels | 137 hybrid levels |
+| Top of atmosphere | 0.01 hPa (~80 km, mesosphere) |
+| Near-surface levels | ~40 levels below 1 km AGL (finest ≈ 10 m) |
+| Output pressure levels (standard) | 37 mandatory levels |
+
+**ECMWF standard pressure levels (hPa)**:
+```
+1000, 925, 850, 700, 600, 500, 400, 300, 250, 200, 150, 100, 70, 50,
+30, 20, 10, 7, 5, 3, 2, 1
+```
+(Open data product; full 137-level native output is available to member states.)
+
+**Why more levels near the surface?** The planetary boundary layer (lowest ~1–2 km) contains the strongest turbulence, moisture gradients, and diurnal cycle. High vertical resolution here is critical for 2-m temperature, surface wind, and fog prediction — especially over complex terrain like the Ebro valley or coastal areas of the Peninsula.
+
+---
+
+### 10.6 Key Forecast Variables
+
+Both models output hundreds of variables. The table below lists the most operationally important ones, grouped by type.
+
+#### Surface / Single-Level Variables
+
+| Short name | Long name | Unit | Notes |
+|---|---|---|---|
+| `t2m` | 2-metre temperature | K | Diagnostic: interpolated to 2 m AGL |
+| `d2m` | 2-metre dewpoint temperature | K | → relative humidity via Magnus formula |
+| `u10`, `v10` | 10-metre wind components | m s⁻¹ | Diagnostic: interpolated to 10 m AGL |
+| `msl` | Mean sea-level pressure | Pa | Reduced from surface pressure |
+| `tp` | Total precipitation | m (accumulated) | GFS: `APCP`; ECMWF: `tp` |
+| `lcc`, `mcc`, `hcc` | Low/medium/high cloud cover | 0–1 | Fraction of sky covered |
+| `tcc` | Total cloud cover | 0–1 | |
+| `cape` | Convective available potential energy | J kg⁻¹ | Thunderstorm potential |
+| `cin` | Convective inhibition | J kg⁻¹ | Convective cap |
+| `sst` | Sea-surface temperature | K | From coupled ocean or prescribed |
+| `sm` | Soil moisture | m³ m⁻³ | Affects 2-m T and boundary layer |
+| `10fg` | 10-m wind gust | m s⁻¹ | Diagnostic from boundary-layer scheme |
+| `ssrd` | Surface solar radiation downward | W m⁻² (accumulated) | Critical for solar energy forecasting |
+| `strd` | Surface thermal radiation downward | W m⁻² (accumulated) | |
+
+#### Pressure-Level Variables
+
+| Short name | Long name | Unit |
+|---|---|---|
+| `t` | Temperature | K |
+| `u`, `v` | Wind components | m s⁻¹ |
+| `w` (`omega`) | Vertical velocity | Pa s⁻¹ |
+| `z` | Geopotential | m² s⁻² (divide by 9.807 for geopotential height in metres) |
+| `q` | Specific humidity | kg kg⁻¹ |
+| `r` | Relative humidity | % |
+| `vo` | Vorticity | s⁻¹ |
+| `d` | Divergence | s⁻¹ |
+
+**The 500 hPa geopotential** (`z` at 500 hPa) is the single most widely used upper-air field in synoptic meteorology — it encodes the large-scale wave pattern and is the standard variable for objective forecast verification.
+
+---
+
+### 10.7 Forecast Error Growth with Lead Time
+
+Forecast error grows because the atmosphere is a chaotic system (Section 1.4). The practical consequence is that **different variables and spatial scales lose predictability at different rates**.
+
+#### The Lorenz Error-Growth Curve
+
+Small initial errors amplify at the rate set by the largest Lyapunov exponent $\lambda_1 \approx 0.35\ \text{day}^{-1}$ (doubling time ≈ 2 days), eventually saturating at the climatological variability level $e_\infty$:
+
+$$e(t) = \frac{e_0\, e^{\lambda_1 t}}{\sqrt{1 + (e_0/e_\infty)^2(e^{2\lambda_1 t} - 1)}}$$
+
+The plot below shows typical **RMSE growth curves** for 850 hPa temperature and 500 hPa geopotential height, using parameters representative of published verification scores. See `src/scripts/plot_lorenz_error_growth.py` for the source code.
+
+![Forecast RMSE growth with lead time — Lorenz model, ECMWF vs GFS](img/forecast_error_growth.png)
+
+#### Anomaly Correlation Coefficient (ACC) — The Standard Skill Metric
+
+Operational centres verify 500 hPa geopotential height forecasts against the verifying analysis using the **ACC**:
+
+$$\text{ACC}(t) = \frac{\sum_{i,j} X'_f(t)\, X'_a}{\sqrt{\sum_{i,j} X_f^{\prime 2}(t) \cdot \sum_{i,j} X_a^{\prime 2}}}$$
+
+where $X' = X - X_\text{clim}$ denotes the anomaly from climatology and the sum is over all Northern Hemisphere extratropical grid points (20–80° N). An ACC of **0.6** is the conventional threshold below which a forecast has no useful synoptic skill.
+
+| Model | Day ACC drops below 0.6 (approx., Z500, N. Hemisphere extratropics) |
+|---|---|
+| ECMWF HRES (2024) | Day 7.0 – 7.5 |
+| GFS (2024) | Day 6.0 – 6.5 |
+| ECMWF ENS mean | Day 8.0 – 9.0 |
+| Persistence | Day 2 – 3 |
+| Climatology | Day 0 (ACC = 0 by construction) |
+
+The ensemble mean **outperforms the deterministic run** beyond day ~4 because averaging over members cancels unpredictable small-scale noise, retaining only the predictable signal.
+
+#### Variable-Dependent Predictability Limits
+
+| Variable | Predictability horizon (approx.) | Reason |
+|---|---|---|
+| 500 hPa geopotential (Z500) | 6–8 days (deterministic) | Large-scale Rossby waves; slow error growth |
+| 850 hPa temperature | 5–7 days | Driven by large-scale dynamics |
+| 2-m temperature | 4–6 days | Influenced by boundary-layer processes |
+| Surface wind speed | 3–5 days | Affected by mesoscale systems |
+| 24-h precipitation location | 2–4 days | Depends on convection triggering |
+| 24-h precipitation amount | 1–3 days | Highly nonlinear; sensitive to moisture |
+| Tropical cyclone track | 5–7 days | Predictable large-scale steering flow |
+| Tropical cyclone intensity | 2–3 days | Rapid intensification is highly chaotic |
+| Fog onset | 12–24 h | Submesoscale boundary-layer processes |
+
+#### Implications for Spain / Iberian Peninsula
+
+The Peninsula's **complex orography** (Pyrenees, Cantabrian Range, Iberian System, Betic Cordillera) introduces additional sources of forecast uncertainty:
+
+- **Orographic precipitation**: Windward–leeward asymmetry is sensitive to the exact synoptic flow. GFS at 0.25° (~28 km) smooths mountain ridges significantly; ECMWF at 0.1° (~11 km) still under-resolves peaks above 2000 m. AEMET's HARMONIE-AROME at 2.5 km is necessary for reliable precipitation forecasts in the Pyrenees.
+- **Cierzo and Tramontane**: Channelled valley winds in the Ebro valley depend on the pressure gradient across the Pyrenees, predictable to ~4 days.
+- **Gota Fría (DANA)**: Cut-off low systems over the western Mediterranean are notoriously difficult — the convective triggering location has a predictability of only 1–2 days even though the large-scale circulation may be predictable to 5–7 days.
+- **Calima events**: Saharan dust intrusions depend on synoptic-scale circulation over North Africa, predictable to ~5 days in terms of arrival timing, but dust concentration is uncertain.
+
+---
 
 - **Holton & Hakim** — *An Introduction to Dynamic Meteorology* (5th ed.): rigorous treatment of the primitive equations and atmospheric dynamics.
 - **Kalnay** — *Atmospheric Modeling, Data Assimilation and Predictability*: the standard graduate text on NWP and DA.

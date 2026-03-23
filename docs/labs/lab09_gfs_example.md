@@ -46,6 +46,37 @@ uv run python -c "import cfgrib, s3fs, cartopy; print('OK')"
 
 ---
 
+## Grid Visualisation — GFS vs ECMWF over the Iberian Peninsula
+
+Before downloading any forecast data it is useful to understand how the model grids look in practice. The script below plots the grid nodes of both GFS (0.25°) and ECMWF IFS (0.1°) over the Iberian Peninsula and saves the result to `docs/img/gfs_vs_ecmwf_grid_iberia.png`.
+
+```bash
+uv run python src/scripts/plot_gfs_ecmwf_grids.py
+```
+
+The script is located at `src/scripts/plot_gfs_ecmwf_grids.py`. It uses `numpy`, `matplotlib`, and `cartopy` — no GRIB data required.
+
+Key points about the script:
+
+- GFS nodes (blue) use a 0.25° regular lat–lon grid — ~2,400 nodes over the Peninsula.
+- ECMWF nodes (orange) use a 0.1° regular lat–lon grid — ~14,250 nodes over the same domain (~6× denser in area).
+- The ECMWF nodes are subsampled every other point for readability.
+- Projection: Lambert Conformal centred at −2.5° E, 40° N to minimise distortion over Spain.
+
+---
+
+## Forecast Error Growth — Lorenz Model
+
+The script below plots RMSE growth curves for Z500, T850, and U10 over a 10-day lead time, comparing ECMWF and GFS using the Lorenz error-growth model. No data download required — the curves are computed analytically from representative verification parameters.
+
+```bash
+uv run python src/scripts/plot_lorenz_error_growth.py
+```
+
+The script is located at `src/scripts/plot_lorenz_error_growth.py` and saves its output to `docs/img/forecast_error_growth.png`.
+
+---
+
 ## Source 1 — NOMADS Filtered Download (recent operational data)
 
 NOAA's **NOMADS** server exposes a HTTP filter interface that lets you request only the variables, pressure levels, and geographic sub-region you need, drastically reducing download size.

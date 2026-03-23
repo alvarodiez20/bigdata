@@ -57,6 +57,10 @@ nav:
     - Meteorology Reference: meteorology_reference.md
     - GFS Example (Dask + Viz): labs/lab09_gfs_example.md
 
+plugins:
+  - search
+  - glightbox
+
 markdown_extensions:
   - admonition
   - pymdownx.details
