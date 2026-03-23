@@ -51,6 +51,15 @@ nav:
   - Lab 08 - Kernel Approximation Methods:
     - Instructions: labs/lab08_instructions.md
     - Tips & Reference: labs/lab08_guide.md
+  - Lab 09 - Final Project Setup:
+    - Instructions: labs/lab09_instructions.md
+    - Tips & Reference: labs/lab09_guide.md
+    - Meteorology Reference: meteorology_reference.md
+    - GFS Example (Dask + Viz): labs/lab09_gfs_example.md
+
+plugins:
+  - search
+  - glightbox
 
 markdown_extensions:
   - admonition
