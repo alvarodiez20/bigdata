@@ -440,7 +440,7 @@ jobs:
 | `ModuleNotFoundError: weather` | `pythonpath` missing in `pytest` config | Add `pythonpath = ["src"]` to `[tool.pytest.ini_options]` |
 | `ruff: error: ... invalid value` | Old ruff syntax | Check ruff changelog; `select`/`ignore` moved under `[tool.ruff.lint]` |
 | `mkdocs: WARNING` treated as error | `--strict` flag | Fix the warning (usually a broken link or missing page) |
-| Docs deploy fails with permissions error | Pages not configured | Enable GitHub Pages → Source: GitHub Actions |
+| Docs deploy fails with permissions error | Pages not configured | Enable GitHub Pages → Source: Deploy from a branch → `gh-pages` / `/ (root)` |
 
 ---
 
@@ -541,13 +541,13 @@ Badges are just images linked to a URL:
 | Problem | Fix |
 |---|---|
 | Coverage badge says "unknown" or doesn't load | Log in to [codecov.io](https://codecov.io) with GitHub, authorize the repository, and wait for the next CI run. |
-| Docs link gives a 404 Not Found error | Go to your repo **Settings** → **Pages** and ensure Source is "GitHub Actions". It takes 2–3 minutes after the first deploy. |
+| Docs link gives a 404 Not Found error | Go to your repo **Settings** → **Pages** and ensure Source is "Deploy from a branch" → `gh-pages` / `/ (root)`. It takes 2–3 minutes after the first deploy. |
 | `git push` rejected with "repository not found" | Check the remote URL: `git remote -v`. Re-add with correct username/repo name. |
 | `uv sync` fails with "no field `version`" | Ensure `pyproject.toml` has `[project]` section with `version = "..."`. |
 | Tests fail with `ImportError: No module named 'weather'` | Set `pythonpath = ["src"]` in `[tool.pytest.ini_options]`. |
 | `ruff format --check` fails in CI but passes locally | Run `ruff format .` locally, commit the changes, and push again. |
 | MkDocs `--strict` fails with "Doc file ... contains a link ..." | Fix broken internal links in `.md` files. |
-| GitHub Pages shows a 404 | Wait 2–3 minutes after the first deploy; also check Settings → Pages is set to *GitHub Actions*. |
+| GitHub Pages shows a 404 | Wait 2–3 minutes after the first deploy; also check Settings → Pages is set to *Deploy from a branch* → `gh-pages` / `/ (root)`. |
 | Release not created | Verify the `release.yml` workflow ran. Check that the version tag does not already exist locally: `git tag`. |
 
 ---

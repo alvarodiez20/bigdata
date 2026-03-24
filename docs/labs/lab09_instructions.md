@@ -317,8 +317,9 @@ git commit -m "Add MkDocs documentation site with Material theme"
 ### Before creating the files — enable GitHub Pages
 
 1. Go to your repository on GitHub → **Settings → Pages**.
-2. Under *Build and deployment* → **Source: GitHub Actions**.
-3. Save. The first deployment will trigger after your next push.
+2. Under *Build and deployment* → **Source: Deploy from a branch**.
+3. Set **Branch** to `gh-pages` and folder to `/ (root)`.
+4. Save. The `gh-pages` branch will be created automatically after your first push.
 
 ### 6.1 — `.github/workflows/ci.yml`
 
