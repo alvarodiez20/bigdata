@@ -107,6 +107,18 @@ Making kernel machine learning feasible for large datasets ([see lab guide](labs
 5. **Kernel Ridge Regression**: End-to-end regression with approximate kernels
 6. **Benchmarking**: Time, memory, and approximation error across all methods
 
+### Lab 09: Final Project Setup — Git, CI/CD & Documentation
+
+Building a professional meteorological analysis project from scratch ([see lab guide](labs/lab09_guide.md)):
+
+1. **Repository Skeleton**: Directory structure, `.gitignore`, and initial README
+2. **`pyproject.toml` & Python Package**: Single source of truth for dependencies, tooling config, and the `src/weather/` package
+3. **Tests with `pytest`**: Unit tests with coverage reports targeting ≥70%
+4. **Code Quality with `ruff`**: Lint and auto-format all Python files before every commit
+5. **MkDocs Documentation**: Documentation site with the Material theme and light/dark palette
+6. **GitHub Actions CI/CD**: Three workflows — CI (lint + test), docs deploy to GitHub Pages, and auto-versioned releases
+7. **README with Badges**: Live CI, coverage, version, and Python badges
+
 ### Lab 10: PySpark — First Contact
 
 Introduction to distributed computing with Apache Spark ([see lab guide](labs/lab10_guide.md)):

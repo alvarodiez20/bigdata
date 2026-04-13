@@ -98,6 +98,7 @@ bigdata/
 | Lab 06 | Streaming Algorithms |
 | Lab 07 | Probabilistic Data Structures & Polars |
 | Lab 08 | Kernel Approximation Methods |
+| Lab 09 | Final Project Setup — Git, CI/CD & Documentation |
 | Lab 10 | PySpark — First Contact |
 
 ## Technology Stack
