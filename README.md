@@ -38,6 +38,7 @@ This repository contains laboratory exercises and materials for the UNIE Big Dat
 - Out-of-core, streaming, and parallel processing
 - Probabilistic data structures (Bloom filters, HyperLogLog, Count-Min Sketch)
 - Kernel approximation methods (RFF, ORF, Nyström)
+- Distributed computing with PySpark (lazy evaluation, shuffles, partitioning)
 
 ## Quick Start
 
@@ -97,6 +98,7 @@ bigdata/
 | Lab 06 | Streaming Algorithms |
 | Lab 07 | Probabilistic Data Structures & Polars |
 | Lab 08 | Kernel Approximation Methods |
+| Lab 10 | PySpark — First Contact |
 
 ## Technology Stack
 
@@ -105,6 +107,7 @@ bigdata/
 - **pandas / numpy** — data manipulation and numerical computing
 - **scipy** — scientific computing (linear algebra, statistics)
 - **polars** — high-performance DataFrame library
+- **PySpark** — distributed data processing with Apache Spark
 - **pyarrow / Parquet** — columnar storage format
 - **matplotlib** — visualization
 - **Jupyter** — interactive notebooks
