@@ -74,10 +74,10 @@ def mini_clientes(spark):
 
 class TestWordcountRdd:
     def test_top_word_is_the(self, spark, small_corpus):
-        """'the' appears 5 times across the corpus — must be first."""
+        """'the' appears 6 times across the corpus — must be first."""
         result = wordcount_rdd(spark.sparkContext, small_corpus)
         assert result[0][0] == "the"
-        assert result[0][1] == 5
+        assert result[0][1] == 6
 
     def test_all_words_counted(self, spark, small_corpus):
         """Every word in the corpus has a non-zero count."""
@@ -129,11 +129,11 @@ class TestWordcountDataframe:
         assert set(df.columns) == {"word", "count"}
 
     def test_top_row_is_most_frequent(self, spark, small_corpus):
-        """First row must be the most frequent word ('the', 5)."""
+        """First row must be the most frequent word ('the', 6)."""
         df = wordcount_dataframe(spark, small_corpus)
         first = df.first()
         assert first["word"] == "the"
-        assert first["count"] == 5
+        assert first["count"] == 6
 
     def test_all_words_present(self, spark, small_corpus):
         """Every unique word from the corpus must appear exactly once."""

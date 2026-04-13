@@ -15,11 +15,17 @@ trigger an action you will see the stages, tasks, and shuffles appear there.
 
 ## Pre-flight Checklist
 
-- [ ] Install PySpark: `uv sync --group lab10`
-- [ ] Verify: `python -c "import pyspark; print(pyspark.__version__)"`
-- [ ] Open `src/lab10.py` — fill in the 8 TODOs
-- [ ] Run the tests: `uv run pytest tests/test_lab10.py -v`
-- [ ] Run the demo: `uv run python src/lab10.py` (Spark UI at localhost:4040)
+!!! note "Platform setup"
+    **macOS:** `brew install openjdk@17` then set `JAVA_HOME` in your shell profile.
+    **Linux:** `sudo apt install openjdk-17-jdk`.
+    **Windows:** follow the [Windows setup](lab10_guide.md#windows-setup--recommended-wsl2) section in the guide before continuing.
+
+- **Java 17+** — verify with `java -version`. See the [guide](lab10_guide.md#java-requirement) if missing or if `JAVA_HOME` is not set.
+- Install PySpark: `uv sync --group lab10`
+- Verify PySpark: `uv run python -c "import pyspark; print(pyspark.__version__)"`
+- Open `src/lab10.py` — fill in the 8 TODOs
+- Run the tests: `uv run pytest tests/test_lab10.py -v`
+- Run the demo: `uv run python src/lab10.py` (Spark UI at <http://localhost:4040>)
 
 ---
 
@@ -113,7 +119,7 @@ df_result.explain(mode="extended")  # full physical plan
 | `pais` | str | From `PAISES` (ES-weighted: 40 out of 100) |
 | `producto` | str | From `PRODUCTOS` |
 | `importe` | float | `round(random.uniform(10, 2000), 2)` |
-| `fecha` | str | `"2025-MM-DD"` |
+| `fecha` | str | `"2025-MM-DD"` (day 1-28 to avoid invalid dates) |
 | `cliente_id` | int | `random.randint(1, 10000)` |
 
 **`create_clientes` schema** (3 columns):
@@ -217,10 +223,14 @@ for part_id, count in partition_distribution(ventas_por_pais):
 **Reflect:**
 
 1. Are the 500 K rows evenly distributed after `repartition(5, "pais")`?
-   Why or why not? Which country creates the largest partition?
-   Connect this to the *hot spot* concept from Chapter 6.
-2. How many distinct `pais` values are there? Can you have more balanced
-   partitions than the number of distinct values? Why not?
+   Why or why not? You will likely see some partitions with ~200 K rows and
+   others that are **completely empty** — this happens because
+   `hash(value) % n_partitions` can map multiple countries to the same
+   bucket while leaving others unused. Connect this to the *hot spot*
+   concept from Chapter 6.
+2. How many distinct `pais` values are there (5)? Even with 5 partitions
+   and 5 values, the hash function does not guarantee a 1-to-1 mapping.
+   Can you predict which partition each country lands in? Why not?
 
 ---
 
@@ -259,17 +269,14 @@ Open the Spark UI → SQL/DataFrame tab and compare the DAGs for the two queries
 2. What happens if you change the number of partitions to 1? To 200?
    Measure and explain the trade-off.
 3. `repartition` always shuffles. `coalesce` only merges partitions (no shuffle).
-   When would you use `coalesce` instead? See the [guide](lab10_guide.md#partitioning)
+   When would you use `coalesce` instead? See the [guide](lab10_guide.md#5-partitioning)
    for details.
 
 ---
 
 ## What to Submit
 
-1. `src/lab10.py` with all 8 TODOs implemented and your name filled in at the top.
-2. All 8 reflection answers written as comments or a markdown cell below each
-   exercise section.
-3. `uv run pytest tests/test_lab10.py -v` must pass completely.
+1. `src/lab10.py` with all 8 TODOs implemented and your name and `STUDENT REFLECTION` filled in at the top.
 
 **Key takeaways to be able to explain:**
 

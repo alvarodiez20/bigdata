@@ -25,6 +25,7 @@ By the end of this course, you will be able to:
 3. Design systems that handle datasets larger than available RAM
 4. Implement probabilistic data structures with provable error guarantees
 5. Apply kernel approximation methods to make kernel ML feasible at scale
+6. Understand distributed computing fundamentals: lazy evaluation, shuffles, and partitioning
 
 ## Course Structure
 
@@ -106,6 +107,17 @@ Making kernel machine learning feasible for large datasets ([see lab guide](labs
 5. **Kernel Ridge Regression**: End-to-end regression with approximate kernels
 6. **Benchmarking**: Time, memory, and approximation error across all methods
 
+### Lab 10: PySpark — First Contact
+
+Introduction to distributed computing with Apache Spark ([see lab guide](labs/lab10_guide.md)):
+
+1. **Spark Architecture**: Driver, executors, and the Spark UI in `local[*]` mode
+2. **RDD vs DataFrame APIs**: Low-level MapReduce vs high-level SQL-like pipelines
+3. **Lazy Evaluation & DAG**: Transformations build a plan; only actions trigger execution
+4. **Shuffles & Stages**: Why `join`, `groupBy`, and `orderBy` force data movement
+5. **Partitioning & Hot Spots**: How skewed data creates bottleneck partitions
+6. **Benchmarking**: Measuring the real cost of repartitioning vs shuffling
+
 ## Getting Started
 
 New to the course? Start with [Lab 01](labs/lab01_setup_io.md), which includes complete setup instructions for Python, VS Code, Git, and `uv`.
@@ -117,6 +129,7 @@ New to the course? Start with [Lab 01](labs/lab01_setup_io.md), which includes c
 - **pandas / numpy**: Data manipulation and numerical computing
 - **scipy**: Scientific computing — linear algebra, statistics
 - **polars**: High-performance DataFrame library with lazy evaluation
+- **PySpark**: Distributed data processing with Apache Spark
 - **pyarrow / Parquet**: Efficient columnar storage
 - **matplotlib**: Visualization
 - **Jupyter**: Interactive notebooks for exploration

@@ -70,11 +70,35 @@ def wordcount_rdd(sc: Any, corpus: list[str], num_partitions: int = 3) -> list[t
         >>> wordcount_rdd(spark.sparkContext, ["the cat and the dog"])
         [('the', 2), ('cat', 1), ('and', 1), ('dog', 1)]
     """
-    raise NotImplementedError(
-        "TODO 1: parallelize corpus (numSlices=num_partitions) → "
-        "flatMap(lambda line: [(w.lower(), 1) for w in line.split()]) → "
-        "reduceByKey(lambda a, b: a + b) → collect() → sort by count desc"
-    )
+    # TODO 1 — Follow these steps:
+    #
+    # 1. Parallelize: sc.parallelize(corpus, numSlices=num_partitions)
+    #    This creates an RDD but does NOT start any computation.
+    #
+    # 2. flatMap: for each line, split into words, lowercase them,
+    #    and emit (word, 1) pairs.  Hint: line.split() + list comprehension.
+    #
+    # 3. reduceByKey: sum the 1s for each word key.
+    #    This is a wide transformation — it causes a shuffle.
+    #
+    # 4. collect(): the first ACTION — triggers execution of the full DAG.
+    #
+    # 5. Sort the collected Python list by count descending, then return it.
+    # Step 1: distribute the corpus across num_partitions partitions
+    rdd = sc.parallelize(corpus, numSlices=num_partitions)
+
+    # Step 2: MAP — each line → list of (word, 1) pairs (flatMap flattens the list)
+    mapped = rdd.flatMap(lambda line: [(word.lower(), 1) for word in line.split()])
+
+    # Step 3: REDUCE — group by word and sum counts
+    counts = mapped.reduceByKey(lambda a, b: a + b)
+
+    # Step 4: ACTION — triggers execution of the entire plan
+    result = counts.collect()
+
+    # Sort in Python (no extra Spark stage needed for small results)
+    return sorted(result, key=lambda x: -x[1])
+    raise NotImplementedError("TODO 1: implement the RDD word count pipeline")
 
 
 def wordcount_dataframe(spark: SparkSession, corpus: list[str]) -> DataFrame:
@@ -109,11 +133,33 @@ def wordcount_dataframe(spark: SparkSession, corpus: list[str]) -> DataFrame:
         | and|    1|
         +----+-----+
     """
-    raise NotImplementedError(
-        "TODO 2: createDataFrame([(line,) for line in corpus], ['text']) → "
-        "select(F.explode(F.split(F.lower(F.col('text')), ' ')).alias('word')) → "
-        "groupBy('word').count() → orderBy(F.desc('count'))"
+    # TODO 2 — Follow these steps:
+    #
+    # 1. Create a one-column DataFrame from the corpus:
+    #        spark.createDataFrame([(line,) for line in corpus], ["text"])
+    #    IMPORTANT: note the trailing comma in (line,) — without it Python
+    #    treats (line) as plain parentheses, not a tuple, and Spark will
+    #    iterate over each *character* instead of each line.
+    #
+    # 2. select: chain lower → split → explode to get one row per word.
+    #    Use F.lower, F.split, F.explode and .alias("word").
+    #
+    # 3. groupBy("word").count()
+    #
+    # 4. orderBy count descending: F.desc("count")
+    #
+    # Return the resulting DataFrame (do NOT call .collect()).
+    df = spark.createDataFrame([(line,) for line in corpus], ["text"])
+
+    return (
+        df
+        # lower() normalises case; split() tokenises on space; explode() unpacks lists
+        .select(F.explode(F.split(F.lower(F.col("text")), " ")).alias("word"))
+        .groupBy("word")
+        .count()
+        .orderBy(F.desc("count"))
     )
+    raise NotImplementedError("TODO 2: implement the DataFrame word count pipeline")
 
 
 # ---------------------------------------------------------------------------
@@ -134,7 +180,8 @@ def create_ventas(spark: SparkSession, n_rows: int = 500_000, seed: int = 42) ->
         pais      (str)    — country code, sampled from PAISES (ES-heavy)
         producto  (str)    — product name, sampled from PRODUCTOS
         importe   (float)  — sale amount, uniform in [10.0, 2000.0], 2 decimal places
-        fecha     (str)    — date string "YYYY-MM-DD", year 2025
+        fecha     (str)    — date string "2025-MM-DD", month 1-12, day 1-28
+                             (day capped at 28 to avoid invalid dates like Feb 30)
         cliente_id (int)   — client ID, uniform in [1, 10000]
 
     Use random.seed(seed) before generating data for reproducibility.
@@ -155,14 +202,35 @@ def create_ventas(spark: SparkSession, n_rows: int = 500_000, seed: int = 42) ->
         >>> ventas.columns
         ['venta_id', 'pais', 'producto', 'importe', 'fecha', 'cliente_id']
     """
-    raise NotImplementedError(
-        "TODO 3: random.seed(seed), build list of tuples "
-        "(i, random.choice(PAISES), random.choice(PRODUCTOS), "
-        "round(random.uniform(10, 2000), 2), "
-        "f'2025-{random.randint(1,12):02d}-{random.randint(1,28):02d}', "
-        "random.randint(1, 10000)) for i in range(n_rows), "
-        "then spark.createDataFrame(data, ['venta_id','pais','producto','importe','fecha','cliente_id'])"
+    # TODO 3 — Follow these steps:
+    #
+    # 1. Set the seed: random.seed(seed)
+    #
+    # 2. Build a list of n_rows tuples.  Each tuple has 6 fields:
+    #      - venta_id:   the loop index (0-based)
+    #      - pais:       random.choice(PAISES)
+    #      - producto:   random.choice(PRODUCTOS)
+    #      - importe:    round(random.uniform(10, 2000), 2)
+    #      - fecha:      formatted as "2025-MM-DD" (month 1-12, day 1-28)
+    #      - cliente_id: random.randint(1, 10000)
+    #
+    # 3. Return spark.createDataFrame(data, [column_names...])
+    random.seed(seed)
+    data = []
+    for i in range(n_rows):
+        data.append((
+            i,
+            random.choice(PAISES),
+            random.choice(PRODUCTOS),
+            round(random.uniform(10, 2000), 2),
+            f"2025-{random.randint(1, 12):02d}-{random.randint(1, 28):02d}",
+            random.randint(1, 10000),
+        ))
+    return spark.createDataFrame(
+        data,
+        ["venta_id", "pais", "producto", "importe", "fecha", "cliente_id"],
     )
+    raise NotImplementedError("TODO 3: generate the synthetic ventas DataFrame")
 
 
 def create_clientes(spark: SparkSession, n_clientes: int = 10_000, seed: int = 42) -> DataFrame:
@@ -192,11 +260,23 @@ def create_clientes(spark: SparkSession, n_clientes: int = 10_000, seed: int = 4
         >>> set(clientes.select('tipo').distinct().toPandas()['tipo'])
         {'premium', 'standard'}
     """
-    raise NotImplementedError(
-        "TODO 4: random.seed(seed), build list of tuples "
-        "(i, f'Cliente_{i}', random.choice(TIPOS)) for i in range(1, n_clientes+1), "
-        "then spark.createDataFrame(data, ['cliente_id','nombre','tipo'])"
-    )
+    # TODO 4 — Follow these steps:
+    #
+    # 1. Set the seed: random.seed(seed)
+    #
+    # 2. Build a list of n_clientes tuples.  Each tuple has 3 fields:
+    #      - cliente_id: 1-based sequential (starts at 1, NOT 0)
+    #      - nombre:     f"Cliente_{id}"
+    #      - tipo:       random.choice(TIPOS)
+    #
+    # 3. Return spark.createDataFrame(data, [column_names...])
+    random.seed(seed)
+    data = [
+        (i, f"Cliente_{i}", random.choice(TIPOS))
+        for i in range(1, n_clientes + 1)
+    ]
+    return spark.createDataFrame(data, ["cliente_id", "nombre", "tipo"])
+    raise NotImplementedError("TODO 4: generate the synthetic clientes DataFrame")
 
 
 def analytics_pipeline(
@@ -233,16 +313,42 @@ def analytics_pipeline(
         DataFrame: Aggregated result with columns
                    (producto, num_ventas, total, media), ordered by total desc.
     """
-    raise NotImplementedError(
-        "TODO 5: ventas.join(clientes, on='cliente_id', how='inner') → "
-        ".filter(F.col('pais') == pais) → "
-        ".filter(F.col('tipo') == tipo) → "
-        ".groupBy('producto') → "
-        ".agg(F.count('*').alias('num_ventas'), "
-        "     F.round(F.sum('importe'), 2).alias('total'), "
-        "     F.round(F.avg('importe'), 2).alias('media')) → "
-        ".orderBy(F.desc('total'))"
+    # TODO 5 — Build the pipeline by chaining these operations:
+    #
+    # 1. Join ventas with clientes on "cliente_id" (inner join).
+    #    → Wide transformation: causes a shuffle.
+    #
+    # 2. Filter: keep only rows where pais equals the pais argument.
+    #    → Narrow transformation: no shuffle.
+    #
+    # 3. Filter: keep only rows where tipo equals the tipo argument.
+    #
+    # 4. groupBy("producto")
+    #    → Wide transformation: causes a shuffle.
+    #
+    # 5. agg: compute three metrics per product group:
+    #      - F.count("*").alias("num_ventas")
+    #      - F.round(F.sum("importe"), 2).alias("total")
+    #      - F.round(F.avg("importe"), 2).alias("media")
+    #
+    # 6. orderBy total descending.
+    #    → Wide transformation: causes a shuffle.
+    #
+    # Return the resulting DataFrame.
+    return (
+        ventas
+        .join(clientes, on="cliente_id", how="inner")
+        .filter(F.col("pais") == pais)
+        .filter(F.col("tipo") == tipo)
+        .groupBy("producto")
+        .agg(
+            F.count("*").alias("num_ventas"),
+            F.round(F.sum("importe"), 2).alias("total"),
+            F.round(F.avg("importe"), 2).alias("media"),
+        )
+        .orderBy(F.desc("total"))
     )
+    raise NotImplementedError("TODO 5: implement the analytics pipeline")
 
 
 # ---------------------------------------------------------------------------
@@ -270,11 +376,27 @@ def partition_distribution(df: DataFrame) -> list[tuple[int, int]]:
         >>> partition_distribution(df)
         [(0, 25), (1, 25), (2, 25), (3, 25)]   # approximate
     """
-    raise NotImplementedError(
-        "TODO 6: df.rdd.mapPartitionsWithIndex("
-        "    lambda idx, it: [(idx, sum(1 for _ in it))]) "
-        ".collect(), then sort by partition_id and return"
-    )
+    # TODO 6 — Follow these steps:
+    #
+    # 1. Use df.rdd.mapPartitionsWithIndex(func) where func is a lambda
+    #    that receives (partition_index, row_iterator) and returns an
+    #    iterable with ONE element: a (index, count) tuple.
+    #
+    #    IMPORTANT: the lambda must return a LIST containing the tuple,
+    #    e.g. [(idx, count)], not a bare tuple (idx, count).
+    #    mapPartitionsWithIndex iterates over whatever you return — a bare
+    #    tuple would be iterated as two separate integers.
+    #
+    #    To count rows without materialising them: sum(1 for _ in iterator)
+    #
+    # 2. .collect() to bring results to the driver.
+    #
+    # 3. Sort by partition_id ascending, then return.
+    raw = df.rdd.mapPartitionsWithIndex(
+        lambda idx, it: [(idx, sum(1 for _ in it))]
+    ).collect()
+    return sorted(raw, key=lambda x: x[0])
+    raise NotImplementedError("TODO 6: count rows per partition")
 
 
 def repartition_by_column(df: DataFrame, col: str, n_partitions: int) -> DataFrame:
@@ -296,9 +418,9 @@ def repartition_by_column(df: DataFrame, col: str, n_partitions: int) -> DataFra
     Returns:
         DataFrame: Repartitioned DataFrame with exactly n_partitions partitions.
     """
-    raise NotImplementedError(
-        "TODO 7: return df.repartition(n_partitions, col)"
-    )
+    # TODO 7 — One line: call df.repartition(n_partitions, col) and return it.
+    return df.repartition(n_partitions, col)
+    raise NotImplementedError("TODO 7: repartition the DataFrame by column")
 
 
 def measure_groupby_time(df: DataFrame, group_col: str, agg_col: str) -> float:
@@ -323,11 +445,16 @@ def measure_groupby_time(df: DataFrame, group_col: str, agg_col: str) -> float:
         >>> t > 0
         True
     """
-    raise NotImplementedError(
-        "TODO 8: t0 = time.perf_counter() → "
-        "df.groupBy(group_col).sum(agg_col).collect() → "
-        "return time.perf_counter() - t0"
-    )
+    # TODO 8 — Follow these steps:
+    #
+    # 1. Record start time with time.perf_counter()
+    # 2. Run df.groupBy(group_col).sum(agg_col).collect()
+    #    The .collect() is critical — without an action, Spark does nothing.
+    # 3. Return elapsed time: time.perf_counter() - start
+    t0 = time.perf_counter()
+    df.groupBy(group_col).sum(agg_col).collect()
+    return time.perf_counter() - t0
+    raise NotImplementedError("TODO 8: measure groupBy timing")
 
 
 # ---------------------------------------------------------------------------
@@ -344,8 +471,9 @@ if __name__ == "__main__":
     print(f"Spark version: {spark.version}")
     print("Spark UI: http://localhost:4040")
     print("=" * 60)
+    input("\nSpark UI is live at http://localhost:4040 — open it now, then press Enter to start...")
 
-    # --- Exercise 1: WordCount ---
+    # --- Exercise 1.1: WordCount with RDDs ---
     corpus = [
         "the quick brown fox jumps over the lazy dog",
         "the fox and the dog are good friends",
@@ -360,29 +488,36 @@ if __name__ == "__main__":
     print("Top 10 words:")
     for word, count in rdd_result[:10]:
         print(f"  {word}: {count}")
+    input("\nExercise 1.1 done. Check the Spark UI (Jobs tab) then press Enter to continue...")
 
+    # --- Exercise 1.2: WordCount with DataFrames ---
     print("\n--- Exercise 1.2: WordCount with DataFrames ---")
     df_result = wordcount_dataframe(spark, corpus)
     df_result.show(10)
     print("\n=== Execution Plan ===")
     df_result.explain()
+    input("\nExercise 1.2 done. Check the SQL/DataFrame tab in the Spark UI then press Enter to continue...")
 
-    # --- Exercise 2: Sales Pipeline ---
-    print("\n--- Exercise 2: Sales Analytics Pipeline ---")
+    # --- Exercise 2.1: Synthetic Data ---
+    print("\n--- Exercise 2.1: Generating Synthetic Data ---")
     ventas = create_ventas(spark, n_rows=500_000)
     clientes = create_clientes(spark, n_clientes=10_000)
     print(f"Ventas:   {ventas.count():,} rows")
     print(f"Clientes: {clientes.count():,} rows")
     ventas.printSchema()
+    input("\nExercise 2.1 done. Press Enter to continue...")
 
+    # --- Exercise 2.2: Analytics Pipeline ---
+    print("\n--- Exercise 2.2: Analytics Pipeline ---")
     t0 = time.perf_counter()
     resultado = analytics_pipeline(ventas, clientes)
     resultado.show()
     print(f"Pipeline time: {time.perf_counter() - t0:.2f}s")
     print("\n=== Pipeline Execution Plan ===")
     resultado.explain()
+    input("\nExercise 2.2 done. Count the Exchange nodes in the plan above, then check the Stages tab in the Spark UI. Press Enter to continue...")
 
-    # --- Exercise 3: Partitions ---
+    # --- Exercise 3.1: Partition Distribution ---
     print("\n--- Exercise 3.1: Partition Distribution ---")
     print(f"Default partitions: {ventas.rdd.getNumPartitions()}")
     ventas_es = repartition_by_column(ventas, "pais", 5)
@@ -391,12 +526,15 @@ if __name__ == "__main__":
     for part_id, count in partition_distribution(ventas_es):
         bar = "█" * (count // 5000)
         print(f"  Partition {part_id}: {count:>7} rows  {bar}")
+    input("\nExercise 3.1 done. Notice the uneven distribution (hot spot). Press Enter to continue...")
 
+    # --- Exercise 3.2: Partition Timing ---
     print("\n--- Exercise 3.2: Partition Timing ---")
     t_sin = measure_groupby_time(ventas, "pais", "importe")
     t_con = measure_groupby_time(ventas_es, "pais", "importe")
     print(f"Without repartition: {t_sin:.3f}s")
     print(f"With repartition:    {t_con:.3f}s")
+    input("\nExercise 3.2 done. Compare the two DAGs in the SQL/DataFrame tab. Press Enter to stop Spark...")
 
     spark.stop()
     print("\nDone. SparkSession stopped.")
