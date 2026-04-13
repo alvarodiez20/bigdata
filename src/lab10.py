@@ -85,19 +85,6 @@ def wordcount_rdd(sc: Any, corpus: list[str], num_partitions: int = 3) -> list[t
     #
     # 5. Sort the collected Python list by count descending, then return it.
     # Step 1: distribute the corpus across num_partitions partitions
-    rdd = sc.parallelize(corpus, numSlices=num_partitions)
-
-    # Step 2: MAP — each line → list of (word, 1) pairs (flatMap flattens the list)
-    mapped = rdd.flatMap(lambda line: [(word.lower(), 1) for word in line.split()])
-
-    # Step 3: REDUCE — group by word and sum counts
-    counts = mapped.reduceByKey(lambda a, b: a + b)
-
-    # Step 4: ACTION — triggers execution of the entire plan
-    result = counts.collect()
-
-    # Sort in Python (no extra Spark stage needed for small results)
-    return sorted(result, key=lambda x: -x[1])
     raise NotImplementedError("TODO 1: implement the RDD word count pipeline")
 
 
@@ -149,16 +136,6 @@ def wordcount_dataframe(spark: SparkSession, corpus: list[str]) -> DataFrame:
     # 4. orderBy count descending: F.desc("count")
     #
     # Return the resulting DataFrame (do NOT call .collect()).
-    df = spark.createDataFrame([(line,) for line in corpus], ["text"])
-
-    return (
-        df
-        # lower() normalises case; split() tokenises on space; explode() unpacks lists
-        .select(F.explode(F.split(F.lower(F.col("text")), " ")).alias("word"))
-        .groupBy("word")
-        .count()
-        .orderBy(F.desc("count"))
-    )
     raise NotImplementedError("TODO 2: implement the DataFrame word count pipeline")
 
 
@@ -215,21 +192,6 @@ def create_ventas(spark: SparkSession, n_rows: int = 500_000, seed: int = 42) ->
     #      - cliente_id: random.randint(1, 10000)
     #
     # 3. Return spark.createDataFrame(data, [column_names...])
-    random.seed(seed)
-    data = []
-    for i in range(n_rows):
-        data.append((
-            i,
-            random.choice(PAISES),
-            random.choice(PRODUCTOS),
-            round(random.uniform(10, 2000), 2),
-            f"2025-{random.randint(1, 12):02d}-{random.randint(1, 28):02d}",
-            random.randint(1, 10000),
-        ))
-    return spark.createDataFrame(
-        data,
-        ["venta_id", "pais", "producto", "importe", "fecha", "cliente_id"],
-    )
     raise NotImplementedError("TODO 3: generate the synthetic ventas DataFrame")
 
 
@@ -270,12 +232,6 @@ def create_clientes(spark: SparkSession, n_clientes: int = 10_000, seed: int = 4
     #      - tipo:       random.choice(TIPOS)
     #
     # 3. Return spark.createDataFrame(data, [column_names...])
-    random.seed(seed)
-    data = [
-        (i, f"Cliente_{i}", random.choice(TIPOS))
-        for i in range(1, n_clientes + 1)
-    ]
-    return spark.createDataFrame(data, ["cliente_id", "nombre", "tipo"])
     raise NotImplementedError("TODO 4: generate the synthetic clientes DataFrame")
 
 
@@ -335,19 +291,6 @@ def analytics_pipeline(
     #    → Wide transformation: causes a shuffle.
     #
     # Return the resulting DataFrame.
-    return (
-        ventas
-        .join(clientes, on="cliente_id", how="inner")
-        .filter(F.col("pais") == pais)
-        .filter(F.col("tipo") == tipo)
-        .groupBy("producto")
-        .agg(
-            F.count("*").alias("num_ventas"),
-            F.round(F.sum("importe"), 2).alias("total"),
-            F.round(F.avg("importe"), 2).alias("media"),
-        )
-        .orderBy(F.desc("total"))
-    )
     raise NotImplementedError("TODO 5: implement the analytics pipeline")
 
 
@@ -392,10 +335,6 @@ def partition_distribution(df: DataFrame) -> list[tuple[int, int]]:
     # 2. .collect() to bring results to the driver.
     #
     # 3. Sort by partition_id ascending, then return.
-    raw = df.rdd.mapPartitionsWithIndex(
-        lambda idx, it: [(idx, sum(1 for _ in it))]
-    ).collect()
-    return sorted(raw, key=lambda x: x[0])
     raise NotImplementedError("TODO 6: count rows per partition")
 
 
@@ -418,8 +357,6 @@ def repartition_by_column(df: DataFrame, col: str, n_partitions: int) -> DataFra
     Returns:
         DataFrame: Repartitioned DataFrame with exactly n_partitions partitions.
     """
-    # TODO 7 — One line: call df.repartition(n_partitions, col) and return it.
-    return df.repartition(n_partitions, col)
     raise NotImplementedError("TODO 7: repartition the DataFrame by column")
 
 
@@ -451,9 +388,6 @@ def measure_groupby_time(df: DataFrame, group_col: str, agg_col: str) -> float:
     # 2. Run df.groupBy(group_col).sum(agg_col).collect()
     #    The .collect() is critical — without an action, Spark does nothing.
     # 3. Return elapsed time: time.perf_counter() - start
-    t0 = time.perf_counter()
-    df.groupBy(group_col).sum(agg_col).collect()
-    return time.perf_counter() - t0
     raise NotImplementedError("TODO 8: measure groupBy timing")
 
 
