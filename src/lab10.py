@@ -418,7 +418,9 @@ if __name__ == "__main__":
     ]
 
     print("\n--- Exercise 1.1: WordCount with RDDs ---")
+    sc.setJobDescription("1.1 wordcount_rdd — collect()")
     rdd_result = wordcount_rdd(sc, corpus, num_partitions=3)
+    sc.setJobDescription("")
     print("Top 10 words:")
     for word, count in rdd_result[:10]:
         print(f"  {word}: {count}")
@@ -426,8 +428,10 @@ if __name__ == "__main__":
 
     # --- Exercise 1.2: WordCount with DataFrames ---
     print("\n--- Exercise 1.2: WordCount with DataFrames ---")
+    sc.setJobDescription("1.2 wordcount_dataframe — show(10)")
     df_result = wordcount_dataframe(spark, corpus)
     df_result.show(10)
+    sc.setJobDescription("")
     print("\n=== Execution Plan ===")
     df_result.explain()
     input("\nExercise 1.2 done. Check the SQL/DataFrame tab in the Spark UI then press Enter to continue...")
@@ -436,16 +440,21 @@ if __name__ == "__main__":
     print("\n--- Exercise 2.1: Generating Synthetic Data ---")
     ventas = create_ventas(spark, n_rows=500_000)
     clientes = create_clientes(spark, n_clientes=10_000)
+    sc.setJobDescription("2.1 ventas.count()")
     print(f"Ventas:   {ventas.count():,} rows")
+    sc.setJobDescription("2.1 clientes.count()")
     print(f"Clientes: {clientes.count():,} rows")
+    sc.setJobDescription("")
     ventas.printSchema()
     input("\nExercise 2.1 done. Press Enter to continue...")
 
     # --- Exercise 2.2: Analytics Pipeline ---
     print("\n--- Exercise 2.2: Analytics Pipeline ---")
+    sc.setJobDescription("2.2 analytics_pipeline — show()")
     t0 = time.perf_counter()
     resultado = analytics_pipeline(ventas, clientes)
     resultado.show()
+    sc.setJobDescription("")
     print(f"Pipeline time: {time.perf_counter() - t0:.2f}s")
     print("\n=== Pipeline Execution Plan ===")
     resultado.explain()
@@ -454,18 +463,24 @@ if __name__ == "__main__":
     # --- Exercise 3.1: Partition Distribution ---
     print("\n--- Exercise 3.1: Partition Distribution ---")
     print(f"Default partitions: {ventas.rdd.getNumPartitions()}")
-    ventas_es = repartition_by_column(ventas, "pais", 5)
-    print(f"After repartition(5, 'pais'): {ventas_es.rdd.getNumPartitions()}")
+    ventas_por_pais = ventas.repartition(5, "pais")
+    print(f"After repartition(5, 'pais'): {ventas_por_pais.rdd.getNumPartitions()}")
     print("\nRow distribution per partition:")
-    for part_id, count in partition_distribution(ventas_es):
+    sc.setJobDescription("3.1 partition_distribution — collect()")
+    for part_id, count in partition_distribution(ventas_por_pais):
         bar = "█" * (count // 5000)
         print(f"  Partition {part_id}: {count:>7} rows  {bar}")
+    sc.setJobDescription("")
     input("\nExercise 3.1 done. Notice the uneven distribution (hot spot). Press Enter to continue...")
 
     # --- Exercise 3.2: Partition Timing ---
     print("\n--- Exercise 3.2: Partition Timing ---")
+    ventas_por_pais = repartition_by_column(ventas, "pais", 5)
+    sc.setJobDescription("3.2 groupBy without repartition")
     t_sin = measure_groupby_time(ventas, "pais", "importe")
-    t_con = measure_groupby_time(ventas_es, "pais", "importe")
+    sc.setJobDescription("3.2 groupBy with repartition(5, pais)")
+    t_con = measure_groupby_time(ventas_por_pais, "pais", "importe")
+    sc.setJobDescription("")
     print(f"Without repartition: {t_sin:.3f}s")
     print(f"With repartition:    {t_con:.3f}s")
     input("\nExercise 3.2 done. Compare the two DAGs in the SQL/DataFrame tab. Press Enter to stop Spark...")
